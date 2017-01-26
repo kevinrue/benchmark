@@ -1,0 +1,2 @@
+Mutect	file1.bam	file2.bam	param1=valueA,param2=valueB,param3=valueC
+Strelka	file1.bam	file2.bam	param1=valueA,param2=valueB,param3=valueC
