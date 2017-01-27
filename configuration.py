@@ -11,12 +11,12 @@ def parseFile(file):
     :type file: str
     """
     logging.info("Parsing configuration file: {0}".format(file))
-    with open(file) as strean:
+    with open(file) as stream:
         # Index of the line being processed
         tmpLineIndex = 0
         # List of configurations
         configList = []
-        for tmpLine in strean:
+        for tmpLine in stream:
             tmpLineIndex += 1
             # Split line into fields
             tmpFields = tmpLine.strip().split("\t")
