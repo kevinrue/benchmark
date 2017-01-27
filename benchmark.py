@@ -11,25 +11,45 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def make_benchmark_dir(folder):
-    """ Create the directory where all benchmarks"""
+    """ Create the root folder for all outputs of this benchmark run."""
     logging.info("Create benchmark output folder: {0}".format(os.path.join(os.getcwd(), folder)))
     os.makedirs(folder)  # Error if folder already exists
     return None
 
 
-def make_software_dirs(benchmarkDir, configs):
-    """Create a folder for each software tested."""
+def make_program_dirs(benchmark_dir, configs):
+    """Create a folder for each software tested. Delegate creation of folders for each configuration tested."""
     all_programs= []
     for config in configs:
         all_programs.append(config['program'])
     unique_programs = set(all_programs)
     for program in unique_programs:
-        program_folder = os.path.join(benchmarkDir, program)
+        #
+        program_folder = os.path.join(benchmark_dir, program)
         logging.info("Create program output folder: {0}".format(program_folder))
         os.mkdir(program_folder)
+        # Make config dirs
+        make_config_dirs(benchmark_dir, program, configs)
     return None
 
-def config2command_line(config):
+
+def make_config_dirs(benchmark_dir, program, configs):
+    """Create a folder for each configuration under the folder for the corresponding program."""
+    config_index = 0
+    for config in configs:
+        if config["program"] == program:
+            config_index += 1
+            config_folder = os.path.join(benchmark_dir, program, "config_{0}".format(config_index))
+            logging.info("Create configuration output folder: {0}".format(config_folder))
+            os.mkdir(config_folder)
+    return None
+
+
+def make_dir_structure(benchmark_dir, configs):
+    # Make one folder for the benchmark outputs
+    make_benchmark_dir(benchmark_dir)
+    # Make one folder per program tested, and one sub-folder per configuration tested
+    make_program_dirs(benchmark_dir, configs)
     return None
 
 
@@ -47,7 +67,5 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     logging.info("Current working directory: {0}".format(os.getcwd()))
-    make_benchmark_dir(args.out)
     configs = configuration.parseFile(args.config)
-    make_software_dirs(args.out, configs)
-    print(configs)
+    make_dir_structure(args.out, configs)
