@@ -1,43 +1,70 @@
 import argparse
 import logging
+import os.path
 
-expectedFieldCount = 4
+expectedFieldCount = 2
 
 logging.basicConfig(level=logging.DEBUG)
 
-def parseFile(file):
+
+class Configuration:
+
+    def __init__(self, program, params):
+        """
+        Initialise a Configuration object.
+        :param program: Program to use in this configuration.
+        :param params: Parameters to supply to the program.
+        """
+        self.program = program
+        self.params = parse_params(params)
+        self.out = os.path.join(os.getcwd(), program)
+
+
+def parse_params(params):
     """
-    Parses a configuration file into commands to run.
+    Parse benchmark parameters.
+    :type params: str
+    :param params: Parameters to supply to the program.
+    :return: None
+    """
+    parsed_params = {}
+    keys_values = params.split(';')
+    for kv in keys_values:
+        (k, v) = kv.split('=')
+        parsed_params[k] = v
+    return parsed_params
+
+
+def parse_file(file):
+    """
+    Parses a configuration file into Configuration objects.
     :type file: str
+    :param file:
+    :return: A list of Configuration objects.
     """
     logging.info("Parsing configuration file: {0}".format(file))
     with open(file) as stream:
         # Index of the line being processed
         tmpLineIndex = 0
         # List of configurations
-        configList = []
+        config_list = []
         for tmpLine in stream:
             tmpLineIndex += 1
             # Split line into fields
-            tmpFields = tmpLine.strip().split("\t")
-            tmpCountFields = len(tmpFields)
+            tmp_fields = tmpLine.strip().split("\t")
+            tmp_count_fields = len(tmp_fields)
             # Check count of fields
-            if expectedFieldCount != tmpCountFields:
+            if expectedFieldCount != tmp_count_fields:
                 raise ValueError(
                     'Unexpected count of fields at line {0}: {1}'.format(
-                        tmpLineIndex, tmpCountFields
+                        tmpLineIndex, tmp_count_fields
                     )
                 )
-            tmpConfig = dict(
-                program=tmpFields[0],
-                file1=tmpFields[1],
-                file2=tmpFields[2],
-                args=tmpFields[3]
-            )
-            configList.append(tmpConfig)
+            tmp_config = Configuration(program=tmp_fields[0],params=tmp_fields[1])
+            config_list.append(tmp_config)
     logging.info("{0} lines parsed in {1}.".format(tmpLineIndex, file))
-    logging.info("{0} configurations imported.".format(len(configList)))
-    return(configList)
+    logging.info("{0} configurations imported.".format(len(config_list)))
+    return config_list
 
 if __name__ == '__main__':
     # Parse command line
@@ -49,4 +76,4 @@ if __name__ == '__main__':
         help='a file of software and configurations to run'
     )
     args = parser.parse_args()
-    parseFile(args.config)
+    parse_file(args.config)
