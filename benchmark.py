@@ -1,4 +1,8 @@
 import argparse
+import configuration
+
+def makeBenchmarkDirectory(path):
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -13,4 +17,5 @@ if __name__ == '__main__':
         help='overall output folder for the benchmark'
     )
     args = parser.parse_args()
-    print(args)
+    configs = configuration.parseFile(args.config)
+    print(configs)

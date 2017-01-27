@@ -3,6 +3,8 @@ import logging
 
 expectedFieldCount = 4
 
+logging.basicConfig(level=logging.DEBUG)
+
 def parseFile(file):
     """
     Parses a configuration file into commands to run.
@@ -11,23 +13,33 @@ def parseFile(file):
     logging.info("Parsing configuration file: {0}".format(file))
     with open(file) as strean:
         # Index of the line being processed
-        lineIndex = 0
-        for line in strean:
-            lineIndex += 1
+        tmpLineIndex = 0
+        # List of configurations
+        configList = []
+        for tmpLine in strean:
+            tmpLineIndex += 1
             # Split line into fields
-            fields = line.split("\t")
-            countFields = len(fields)
+            tmpFields = tmpLine.strip().split("\t")
+            tmpCountFields = len(tmpFields)
             # Check count of fields
-            if expectedFieldCount != countFields:
+            if expectedFieldCount != tmpCountFields:
                 raise ValueError(
                     'Unexpected count of fields at line {0}: {1}'.format(
-                    lineIndex, countFields)
+                        tmpLineIndex, tmpCountFields
+                    )
                 )
-    logging.info("{0} lines parsed in {1}.".format(lineIndex, file))
+            tmpConfig = dict(
+                program=tmpFields[0],
+                file1=tmpFields[1],
+                file2=tmpFields[2],
+                args=tmpFields[3]
+            )
+            configList.append(tmpConfig)
+    logging.info("{0} lines parsed in {1}.".format(tmpLineIndex, file))
+    logging.info("{0} configurations imported.".format(len(configList)))
+    return(configList)
 
 if __name__ == '__main__':
-    # Set logging level
-    logging.basicConfig(level=logging.INFO)
     # Parse command line
     parser = argparse.ArgumentParser(
         description='Parse a configuration file for to benchmarkk software.'
