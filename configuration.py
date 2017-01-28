@@ -5,22 +5,39 @@ import os.path
 logging.basicConfig(level=logging.DEBUG)
 
 
-class ProgramConfiguration:
+class SingleConfiguration:
 
-    def __init__(self, out, params):
+    def __init__(self, params, out):
+        self.params = params
+        self.out=out
+
+
+class ProgramConfigurationList:
+
+    def __init__(self, params, out):
         """
         Initialise a Configuration object.
-        :param program: Program to use in this configuration.
         :param params: Parameters to supply to the program.
+        :param out: Program to use in this configuration.
         """
-        self.exe = None
-        self.params = parse_params(params)
-        self.out = os.path.join(os.getcwd(), program)
+        self.configurations = []
+        self.out = out
+        self.add_configuration(params, self.out)
+
+    def add_configuration(self, params, out):
+        """
+        Add a configuration.
+        :param params: Dictionary of parameter flags and values.
+        :param out: Root folder to store outputs of all configurations for this program.
+        :return: None
+        """
+        config_out = os.path.join(self.out, "config_{0}".format(len(self.configurations)+1))
+        self.configurations.append(SingleConfiguration(params, config_out))
 
 
 class BenchmarkConfiguration:
 
-    def __init__(self, file, out=None):
+    def __init__(self, file, out):
         """
         Initialise a BenchmarkConfiguration object.
         :type file: str
@@ -28,40 +45,41 @@ class BenchmarkConfiguration:
         :param out: Root folder to store all outputs of the benchmark.
         """
         self.file = file
-        self.configurations = self.parse_tsv()
+        self.configurations = {}
         self.out = out
+        self.parse_tsv()
 
     def parse_tsv(self):
         """
-        Parses a configuration file into Configuration objects.
-        :type file: str
-        :param file:
-        :return: A list of Configuration objects.
+        Parse a configuration file.
+        :return: None
         """
         logging.info("Parse configuration file: {0}".format(self.file))
-        parsed_configurations = {}
         count_config = 0
         with open(self.file) as stream:
             tmp_line_index = 0
             for tmp_line in stream:
                 tmp_line_index += 1
-                count_config += self.add_configuration(parsed_configurations, tmp_line)
+                count_config += self.add_configuration(self.out, tmp_line.strip())
         logging.info("{0} lines parsed in {1}.".format(tmp_line_index, self.file))
         logging.info("{0} configurations imported.".format(count_config))
-        return parsed_configurations
+        return None
 
-    def add_configuration(self, configurations, config_line):
+    def add_configuration(self, out, config_line):
         """
         Add a program with an empty list of configurations to a set of configurations if is not present yet.
-        :param configurations: A dictionary of configurations.
+        :param out: Root folder for all outputs of this benchmark run
         :param config_line: One line of the input configuration file.
-        :return: Count of configurations added; always 1.
+        :return: Count of configurations added.
         """
+        if not len(config_line):
+            return 0
         (program, params) = config_line.split('\t')
-        if program in configurations.keys():
-            configurations[program].append(self.parse_params(params))
+        parsed_params = self.parse_params(params)
+        if program in self.configurations.keys():
+            self.configurations[program].add_configuration(parsed_params, program)
         else:
-            configurations[program] = [self.parse_params(params)]
+            self.configurations[program] = ProgramConfigurationList(parsed_params, program)
         return 1
 
     @staticmethod
@@ -88,8 +106,8 @@ class BenchmarkConfiguration:
         file = os.path.join(folder, 'config.txt')
         logging.info("Create configuration log file: {0}".format(file))
         with open(file, 'w') as stream:
-            for key in config:
-                stream.write("{0}\t{1}\n".format(key, config[key]))
+            for key in config.params.keys():
+                stream.write("{0}\t{1}\n".format(key, config.params[key]))
         return None
 
     def make_config_dirs(self, program):
@@ -100,7 +118,7 @@ class BenchmarkConfiguration:
         :return: None
         """
         config_index = 0
-        for config in self.configurations[program]:
+        for config in self.configurations[program].configurations:
             config_index += 1
             config_folder = os.path.join(self.out, program, "config_{0}".format(config_index))
             logging.info("Create configuration output folder: {0}".format(config_folder))
@@ -154,8 +172,6 @@ if __name__ == '__main__':
         help='a file of software and configurations to run'
     )
     args = parser.parse_args()
-    bc = BenchmarkConfiguration(args.config)
+    bc = BenchmarkConfiguration(args.config, ".")
     bc.parse_tsv()
-    # print(bc.out)
-    # print(bc.configurations['Mutect'])
-    # print(bc.configurations['Strelka'])
+    print(bc.configurations["Mutect"][0])
