@@ -34,6 +34,35 @@ class ProgramConfigurationList:
         config_out = os.path.join(self.out, "config_{0}".format(len(self.configurations)+1))
         self.configurations.append(SingleConfiguration(params, config_out))
 
+    def make_config_dirs(self, out):
+        """
+        Create a folder for each configuration under the folder for the corresponding program.
+        Side-effect: update configurations to define the individual output folder for each configuration.
+        :param out: Root folder to store all outputs of the program.
+        :return: None
+        """
+        config_index = 0
+        for config in self.configurations:
+            config_index += 1
+            config_folder = os.path.join(out, "config_{0}".format(config_index))
+            logging.info("Create configuration output folder: {0}".format(config_folder))
+            os.mkdir(config_folder)
+            self.write_config_file(config, config_folder)
+        return None
+
+    @staticmethod
+    def write_config_file(config, folder):
+        """
+        Write the configuration parameters in a file in the corresponding folder.
+        :return: None
+        """
+        file = os.path.join(folder, 'config.txt')
+        logging.info("Create configuration log file: {0}".format(file))
+        with open(file, 'w') as stream:
+            for key in config.params.keys():
+                stream.write("{0}\t{1}\n".format(key, config.params[key]))
+        return None
+
 
 class BenchmarkConfiguration:
 
@@ -60,15 +89,14 @@ class BenchmarkConfiguration:
             tmp_line_index = 0
             for tmp_line in stream:
                 tmp_line_index += 1
-                count_config += self.add_configuration(self.out, tmp_line.strip())
+                count_config += self.add_configuration(tmp_line.strip())
         logging.info("{0} lines parsed in {1}.".format(tmp_line_index, self.file))
         logging.info("{0} configurations imported.".format(count_config))
         return None
 
-    def add_configuration(self, out, config_line):
+    def add_configuration(self, config_line):
         """
-        Add a program with an empty list of configurations to a set of configurations if is not present yet.
-        :param out: Root folder for all outputs of this benchmark run
+        Initialise a ProgramConfigurationList or append a new configuration to an existing one.
         :param config_line: One line of the input configuration file.
         :return: Count of configurations added.
         """
@@ -97,36 +125,6 @@ class BenchmarkConfiguration:
             parsed_params[k] = v
         return parsed_params
 
-    @staticmethod
-    def write_config_file(config, folder):
-        """
-        Write the configuration parameters in a file in the corresponding folder.
-        :return: None
-        """
-        file = os.path.join(folder, 'config.txt')
-        logging.info("Create configuration log file: {0}".format(file))
-        with open(file, 'w') as stream:
-            for key in config.params.keys():
-                stream.write("{0}\t{1}\n".format(key, config.params[key]))
-        return None
-
-    def make_config_dirs(self, program):
-        """
-        Create a folder for each configuration under the folder for the corresponding program.
-        Side-effect: update configurations to define the individual output folder for each configuration.
-        :param program: Process only configurations of this program.
-        :return: None
-        """
-        config_index = 0
-        for config in self.configurations[program].configurations:
-            config_index += 1
-            config_folder = os.path.join(self.out, program, "config_{0}".format(config_index))
-            logging.info("Create configuration output folder: {0}".format(config_folder))
-            os.mkdir(config_folder)
-            # config.out = config_folder
-            self.write_config_file(config, config_folder)
-        return None
-
     def make_program_dirs(self):
         """
         Create a folder for each program tested;
@@ -139,7 +137,7 @@ class BenchmarkConfiguration:
             program_folder = os.path.join(self.out, program)
             logging.info("Create program output folder: {0}".format(program_folder))
             os.mkdir(program_folder)
-            self.make_config_dirs(program)
+            self.configurations[program].make_config_dirs(program_folder)
         return None
 
     def make_benchmark_dir(self):
@@ -160,18 +158,3 @@ class BenchmarkConfiguration:
         self.make_benchmark_dir()
         self.make_program_dirs()
         return None
-
-
-if __name__ == '__main__':
-    # Parse command line
-    parser = argparse.ArgumentParser(
-        description='Parse a configuration file for to benchmark software.'
-    )
-    parser.add_argument(
-        'config', metavar='config.txt', type=str,
-        help='a file of software and configurations to run'
-    )
-    args = parser.parse_args()
-    bc = BenchmarkConfiguration(args.config, ".")
-    bc.parse_tsv()
-    print(bc.configurations["Mutect"][0])

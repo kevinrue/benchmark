@@ -33,6 +33,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logging.info("Current working directory: {0}".format(os.getcwd()))
     configs = configuration.BenchmarkConfiguration(args.config, args.out)
-    print(configs.out)
     configs.make_dir_structure()
 
