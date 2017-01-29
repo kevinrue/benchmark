@@ -1,11 +1,8 @@
 # Official
 import argparse
-import os
-import os.path
-import logging
 
 # Custom
-import configuration
+from BenchmarkConfiguration import *
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -32,6 +29,5 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     logging.info("Current working directory: {0}".format(os.getcwd()))
-    configs = configuration.BenchmarkConfiguration(args.config, args.out)
+    configs = BenchmarkConfiguration(args.config, args.out)
     configs.make_dir_structure()
-
