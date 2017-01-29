@@ -139,7 +139,7 @@ class BenchmarkConfiguration:
             program_folder = os.path.join(self.out, program)
             logging.info("Create program output folder: {0}".format(program_folder))
             os.mkdir(program_folder)
-            configs = self.make_config_dirs(program)
+            self.make_config_dirs(program)
         return None
 
     def make_benchmark_dir(self):
