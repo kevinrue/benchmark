@@ -66,12 +66,13 @@ class SinglePairedConfiguration:
         output_vcf = os.path.join(out, self.out, 'output.vcf')
         dbsnp = "--dbsnp {0}".format(os.path.join(ref_beds_dir, 'known.vcf'))
         cosmic = "--cosmic {0}".format(os.path.join(ref_beds_dir, 'Cosmic.vcf'))
-        cmd = "java -Xmx25g -jar {0} -T MuTect2 -R {1} -I:tumour {2} -I:normal {3} {4} {5} -o {6}\n".format(
+        cmd = "java -Xmx25g -jar {0} -T MuTect2 -R {1} -I:tumour {2} -I:normal {3} {4} {5} -o {6}".format(
             exe, ref, files2, files1, dbsnp, cosmic, output_vcf
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
             self.write_prolog_script(script_file, output_dir)
+        cmd += "\n"
         with open(script_file, 'a') as stream:
             stream.write(cmd)
         self.make_script_executable(script_file)
@@ -87,11 +88,12 @@ class SinglePairedConfiguration:
         script_file = os.path.join(out, self.out, 'script.sh')
         logging.info("Create script file: {0}".format(script_file))
         output_dir = os.path.join(out, self.out)
-        cmd = "{0} --normal {1} --tumor {2} --ref {3} --config {4} --output-dir {5}\n".format(
+        cmd = "{0} --normal {1} --tumor {2} --ref {3} --config {4} --output-dir {5}".format(
             exe, files1, files2, ref, ini, output_dir
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
+        cmd += "\n"
         self.write_prolog_script(script_file, output_dir)
         with open(script_file, 'a') as stream:
             stream.write("cp {0} config.ini".format(ini))
