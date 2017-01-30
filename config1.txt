@@ -1,3 +1,8 @@
-Mutect	--param1=valueA;--param2=valueB;--param3=valueC
-Mutect	--param1=valueAA;--param2=valueBB;--param3=valueCC
-Strelka	-param4=valueD;-param2=valueE;-param3=valueF
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=0.5;--normal_lod=2.2
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=1;--normal_lod=2.2
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=2;--normal_lod=2.2
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=3;--normal_lod=2.2
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=0.5;--normal_lod=1
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=1;--normal_lod=1
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=2;--normal_lod=1
+Mutect2	--dbsnp=dbSNP.vcf;--cosmic=COSMIC.vcf;--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=3;--normal_lod=1

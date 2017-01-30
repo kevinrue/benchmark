@@ -3,7 +3,10 @@ import os
 from ProgramConfiguration import *
 
 
-class BenchmarkConfiguration:
+class PairedBenchmarkConfiguration:
+    """
+    A class to store configurations to benchmark programs that require paired input files (e.g. normal treated).
+    """
 
     def __init__(self, file, out):
         """
@@ -35,19 +38,37 @@ class BenchmarkConfiguration:
 
     def add_configuration(self, config_line):
         """
-        Initialise a ProgramConfigurationList or append a new configuration to an existing one.
+        Initialise a ProgramConfiguration or append a new configuration to an existing one.
         :param config_line: One line of the input configuration file.
         :return: Count of configurations added.
         """
         if not len(config_line):
             return 0
-        (program, params) = config_line.split('\t')
+        try:
+            (program, params) = config_line.split('\t')
+        except ValueError:
+            print("Failed to split tab-separated configuration entry: {0}".format(config_line))
+            raise
         parsed_params = self.parse_params(params)
         if program in self.configurations.keys():
             self.configurations[program].add_configuration(parsed_params)
         else:
-            self.configurations[program] = ProgramConfigurationList(parsed_params, program)
+            self.configurations[program] = self.select_program_config(parsed_params, program)
         return 1
+
+    @staticmethod
+    def select_program_config(params, program):
+        """
+        Create a ProgramConfiguration object adapted to a given program.
+        :param params: Dictionary of flag/value pairs.
+        :param program: Keyword of the program to benchmark.
+        :return: An object that extends the ProgramConfiguration class.
+        """
+        if program == "Mutect2":
+            return Mutect2PairedConfiguration(params, program)
+        else:
+            print('Invalid program keyword: {0}'.format(program))
+            raise
 
     @staticmethod
     def parse_params(params):
@@ -60,7 +81,10 @@ class BenchmarkConfiguration:
         parsed_params = {}
         keys_values = params.split(';')
         for kv in keys_values:
-            (k, v) = kv.split('=')
+            try:
+                (k, v) = kv.split('=')
+            except ValueError:
+                raise ValueError("Failed to split flag=value pair: {0}".format(kv))
             parsed_params[k] = v
         return parsed_params
 
@@ -92,4 +116,22 @@ class BenchmarkConfiguration:
         """
         for program in self.configurations.values():
             program.make_dir_structure(self.out)
+        return None
+
+    def write_scripts(self, ref, files1, files2):
+        """
+        Write a shell script for each configuration.
+        :return: None
+        """
+        for program in self.configurations.values():
+            program.write_scripts(self.out, ref, files1, files2)
+        return None
+
+    def submit_scripts(self):
+        """
+        Run all benchmark scripts.
+        :return:
+        """
+        for program in self.configurations.values():
+            program.submit_scripts(self.out)
         return None
