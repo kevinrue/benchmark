@@ -70,8 +70,8 @@ class SinglePairedConfiguration:
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
-        with open(script_file, 'w') as stream:
-            stream.write("#!/bin/bash\n")
+            self.write_prolog_script(script_file, out)
+        with open(script_file, 'a') as stream:
             stream.write(cmd)
         self.make_script_executable(script_file)
         return None
@@ -91,12 +91,24 @@ class SinglePairedConfiguration:
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
-        with open(script_file, 'w') as stream:
-            stream.write("#!/bin/bash\n")
-            stream.write("cd {0}\n".format(output_dir))
+        self.write_prolog_script(script_file, out)
+        with open(script_file, 'a') as stream:
             stream.write("cp {0} config.ini".format(ini))
             stream.write(cmd)
             stream.write("make\n")
+        return None
+
+    @staticmethod
+    def write_prolog_script(script, out):
+        """
+        Write common prolog of benchmark scripts.
+        :param script: Filename of the script file to write.
+        :param out: Folder to store outputs of the configuration benchmark.
+        :return: None
+        """
+        with open(script, 'w') as stream:
+            stream.write("#!/bin/bash\n")
+            stream.write("cd {0}\n".format(out))
         return None
 
     @staticmethod
