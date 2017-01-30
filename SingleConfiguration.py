@@ -137,7 +137,7 @@ class SinglePairedConfiguration:
             '-e', stderr_file,
             '-pe', 'shmem', str(self.n_cores),
             '-N', job_name,
-            '-q', 'short_qc',
+            '-q', 'short.qc',
             script
         ]
         qsub_cmd_str = ' '.join(qsub_cmd_args)
