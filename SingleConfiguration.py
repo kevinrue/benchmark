@@ -3,7 +3,7 @@ import logging
 import os
 import subprocess
 
-from LocalSettings import ref_beds_dir
+from LocalSettings import ref_beds_dir, java_exe
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -66,8 +66,8 @@ class SinglePairedConfiguration:
         output_vcf = os.path.join(out, self.out, 'output.vcf')
         dbsnp = "--dbsnp {0}".format(os.path.join(ref_beds_dir, 'known.vcf'))
         cosmic = "--cosmic {0}".format(os.path.join(ref_beds_dir, 'Cosmic.vcf'))
-        cmd = "java -Xmx25g -jar {0} -T MuTect2 -R {1} -I:tumour {2} -I:normal {3} {4} {5} -o {6}".format(
-            exe, ref, files2, files1, dbsnp, cosmic, output_vcf
+        cmd = "{0} -Xmx25g -jar {1} -T MuTect2 -R {2} -I:tumour {3} -I:normal {4} {5} {6} -o {7}".format(
+            java_exe, exe, ref, files2, files1, dbsnp, cosmic, output_vcf
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
