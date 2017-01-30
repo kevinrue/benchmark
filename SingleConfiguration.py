@@ -67,7 +67,7 @@ class SinglePairedConfiguration:
         dbsnp = "--dbsnp {0}".format(os.path.join(ref_beds_dir, 'known.vcf'))
         cosmic = "--cosmic {0}".format(os.path.join(ref_beds_dir, 'Cosmic.vcf'))
         lexico = '-U ALLOW_SEQ_DICT_INCOMPATIBILITY'
-        cmd = "{0} -Xmx25g -jar {1} -T MuTect2 -R {2} -I:tumour {3} -I:normal {4} {5} {6} -o {7} {8}".format(
+        cmd = "{0} -Xmx25g -jar {1} -T MuTect2 -R {2} -I:tumor {3} -I:normal {4} {5} {6} -o {7} {8}".format(
             java_exe, exe, ref, files2, files1, dbsnp, cosmic, output_vcf, lexico
         )
         for key in self.params.keys():
