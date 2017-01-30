@@ -70,7 +70,7 @@ class SinglePairedConfiguration:
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
-            self.write_prolog_script(script_file, out)
+            self.write_prolog_script(script_file, output_dir)
         with open(script_file, 'a') as stream:
             stream.write(cmd)
         self.make_script_executable(script_file)
@@ -91,7 +91,7 @@ class SinglePairedConfiguration:
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
-        self.write_prolog_script(script_file, out)
+        self.write_prolog_script(script_file, output_dir)
         with open(script_file, 'a') as stream:
             stream.write("cp {0} config.ini".format(ini))
             stream.write(cmd)
