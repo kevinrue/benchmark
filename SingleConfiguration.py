@@ -1,6 +1,6 @@
 
 import logging
-import os.path
+import os
 import subprocess
 
 from LocalSettings import ref_beds_dir
@@ -17,7 +17,7 @@ class SinglePairedConfiguration:
     script_filename = 'benchmark_script.sh'
     job_stdout = 'stdout.log'
     job_stderr = 'stderr.log'
-    n_cores = 2
+    n_cores = 4
 
     def __init__(self, params, index):
         """
@@ -60,11 +60,12 @@ class SinglePairedConfiguration:
         :param exe: Path to executable of the program.
         :return: None
         """
-        script_file = os.path.join(out, self.out, self.script_filename)
+        output_dir = os.path.join(out, self.out)
+        script_file = os.path.join(output_dir, self.script_filename)
         logging.info("Create script file: {0}".format(script_file))
         output_vcf = os.path.join(out, self.out, 'output.vcf')
-        dbsnp = "--dbsnp {0}".format(ref_beds_dir, 'known.vcf')
-        cosmic = "--cosmic {0}".format(ref_beds_dir, 'Cosmic.vcf')
+        dbsnp = "--dbsnp {0}".format(os.path.join(ref_beds_dir, 'known.vcf'))
+        cosmic = "--cosmic {0}".format(os.path.join(ref_beds_dir, 'Cosmic.vcf'))
         cmd = "java -Xmx25g -jar {0} -T MuTect2 -R {1} -I:tumour {2} -I:normal {3} {4} {5} -o {6}\n".format(
             exe, ref, files2, files1, dbsnp, cosmic, output_vcf
         )
@@ -130,9 +131,16 @@ class SinglePairedConfiguration:
         stdout_file = os.path.join(output_dir, self.job_stdout)
         stderr_file = os.path.join(output_dir, self.job_stderr)
         job_name = "{0}_{1}".format(os.path.basename(out), self.index)
-        qsub_cmd = "qsub -o {0} -e {1} -pe shmem {2} -N {3} -q short_qc {4}".format(
-            stdout_file, stderr_file, self.n_cores, job_name, script
-        )
-        logging.info("Submit command: {0}".format(qsub_cmd))
-        subprocess.call(qsub_cmd)
+        qsub_cmd_args = [
+            'qsub',
+            '-o', stdout_file,
+            '-e', stderr_file,
+            '-pe', 'shmem', str(self.n_cores),
+            '-N', job_name,
+            '-q', 'short_qc',
+            script
+        ]
+        qsub_cmd_str = ' '.join(qsub_cmd_args)
+        logging.info("Submit command: {0}".format(qsub_cmd_str))
+        subprocess.call(qsub_cmd_args)
         return None
