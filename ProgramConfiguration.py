@@ -113,3 +113,26 @@ class StrelkaPairedConfiguration(PairedProgramConfiguration):
             program_folder = os.path.join(out, self.out)
             config.write_strelka_script(program_folder, self.path2exe, self.config_ini, ref, file1, file2)
         return None
+
+
+class VirmidPairedConfiguration(PairedProgramConfiguration):
+    """
+    Configuration for the Virmid program.
+    """
+    def __init__(self, params, out):
+        super().__init__(params, out)
+        self.path2exe = os.path.join(virmid_dir, 'virmid.jar')
+
+    def write_scripts(self, out, ref, file1, file2):
+        """
+        Write a script for each configuration.
+        :param out: Root folder to store outputs of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        for config in self.configurations:
+            program_folder = os.path.join(out, self.out)
+            config.write_virmid_script(program_folder, self.path2exe, ref, file1, file2)
+        return None

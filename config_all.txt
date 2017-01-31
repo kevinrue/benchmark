@@ -1,0 +1,8 @@
+Mutect2	--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=0.5;--normal_lod=2.2
+Mutect2	--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=1;--normal_lod
+Strelka	isSkipDepthFilters=0;maxInputDepth=10000
+Strelka	isSkipDepthFilters=1
+Strelka	isSkipDepthFilters=0;maxInputDepth=20000
+Strelka	isSkipDepthFilters=0;maxInputDepth=50000
+Strelka	isSkipDepthFilters=0;maxInputDepth=100000=2.2
+Virmid	-v=5;-C1=1000;-C2=1000

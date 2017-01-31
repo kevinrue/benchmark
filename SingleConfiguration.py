@@ -115,6 +115,32 @@ class SinglePairedConfiguration:
             stream.write(cmd)
             stream.write("cd {0}\n".format(output_dir))
             stream.write("make\n")
+        self.make_script_executable(script_file)
+        return None
+
+    def write_virmid_script(self, out, exe, ref, file1, file2):
+        """
+        Write a script to run the configuration using the Mutect2 program.
+        :param out: Folder to store outputs of the program.
+        :param exe: Path to executable of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        output_dir = os.path.join(out, self.out)
+        script_file = os.path.join(output_dir, self.script_filename)
+        logging.info("Create script file: {0}".format(script_file))
+        cmd = "{0} -Xmx25g -jar {1} -R {2} -D {3} -N {4} -w {5}".format(
+            java_exe, exe, ref, file2, file1, output_dir
+        )
+        for key in self.params.keys():
+            cmd += " {0} {1}".format(key, self.params[key])
+            self.write_prolog_script(script_file, output_dir)
+        cmd += "\n"
+        with open(script_file, 'a') as stream:
+            stream.write(cmd)
+        self.make_script_executable(script_file)
         return None
 
     @staticmethod

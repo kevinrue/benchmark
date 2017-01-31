@@ -68,6 +68,8 @@ class PairedBenchmarkConfiguration:
             return Mutect2PairedConfiguration(params, program)
         elif program == "Strelka":
             return StrelkaPairedConfiguration(params, program)
+        elif program == "Virmid":
+            return VirmidPairedConfiguration(params, program)
         else:
             print('Invalid program keyword: {0}'.format(program))
             raise
