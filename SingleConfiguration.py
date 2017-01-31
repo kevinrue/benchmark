@@ -101,17 +101,19 @@ class SinglePairedConfiguration:
         """
         script_file = os.path.join(out, self.out, self.script_filename)
         logging.info("Create script file: {0}".format(script_file))
-        output_dir = os.path.join(out, self.out)
-        config_file = os.path.join(output_dir, 'strelka_config.ini')
+        config_dir = os.path.join(out, self.out)
+        config_file = os.path.join(config_dir, 'strelka_config.ini')
+        output_dir = os.path.join(config_dir, 'analysis')
         cmd = "{0} --normal {1} --tumor {2} --ref {3} --config {4} --output-dir {5}\n".format(
             exe, file1, file2, ref, config_file, output_dir
         )
-        self.write_prolog_script(script_file, output_dir)
+        self.write_prolog_script(script_file, config_dir)
         with open(script_file, 'a') as stream:
             stream.write("cp {0} {1}\n".format(ini, config_file))
             for key in self.params.keys():
                 stream.write("sed -i 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
             stream.write(cmd)
+            stream.write("cd {0}\n".format(output_dir))
             stream.write("make\n")
         return None
 
@@ -125,7 +127,6 @@ class SinglePairedConfiguration:
         """
         with open(script, 'w') as stream:
             stream.write("#!/bin/bash\n")
-            stream.write("cd {0}\n".format(out))
         return None
 
     @staticmethod
