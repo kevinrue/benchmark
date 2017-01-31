@@ -70,6 +70,8 @@ class PairedBenchmarkConfiguration:
             return StrelkaPairedConfiguration(params, program)
         elif program == "Virmid":
             return VirmidPairedConfiguration(params, program)
+        elif program == "EBcall":
+            return EBcallPairedConfiguration(params, program)
         else:
             print('Invalid program keyword: {0}'.format(program))
             raise

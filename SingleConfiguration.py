@@ -3,7 +3,7 @@ import logging
 import os
 import subprocess
 
-from LocalSettings import ref_beds_dir, java_exe
+from LocalSettings import *
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -88,15 +88,15 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_strelka_script(self, out, exe, ini, ref, file1, file2):
+    def write_strelka_script(self, out, exe, ref, file1, file2, template):
         """
         Write a script to run the configuration using the Mutect2 program.
         :param out: Folder to store outputs of the program.
         :param exe: Path to executable of the program.
-        :param ini: Template Strelka configuration file.
         :param ref: Reference genome Fasta file.
         :param file1: Input file for reference group (e.g. normal).
         :param file2: Input file for target group (e.g. tumour).
+        :param template: Template Strelka configuration file.
         :return: None
         """
         script_file = os.path.join(out, self.out, self.script_filename)
@@ -109,7 +109,7 @@ class SinglePairedConfiguration:
         )
         self.write_prolog_script(script_file, config_dir)
         with open(script_file, 'a') as stream:
-            stream.write("cp {0} {1}\n".format(ini, config_file))
+            stream.write("cp {0} {1}\n".format(template, config_file))
             for key in self.params.keys():
                 stream.write("sed -i 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
             stream.write(cmd)
@@ -139,6 +139,40 @@ class SinglePairedConfiguration:
             self.write_prolog_script(script_file, output_dir)
         cmd += "\n"
         with open(script_file, 'a') as stream:
+            stream.write(cmd)
+        self.make_script_executable(script_file)
+        return None
+
+    def write_EBcall_script(self, out, exe, ref, file1, file2, template, normal_list):
+        """
+        Write a script to run the configuration using the Mutect2 program.
+        :param out: Folder to store outputs of the program.
+        :param exe: Path to executable of the program.
+        :param template: Template EBcall configuration script.
+        :param normal_list: List of paths to .bam files for non-paired normal reference samples.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        script_file = os.path.join(out, self.out, self.script_filename)
+        logging.info("Create script file: {0}".format(script_file))
+        config_dir = os.path.join(out, self.out)
+        config_script = os.path.join(config_dir, 'EBcall_config.sh')
+        output_dir = os.path.join(config_dir, 'analysis')
+        cmd = "sh {0} {1} {2} {3} {4} {5}\n".format(
+            exe, file2, file1, output_dir, normal_list, config_script,
+        )
+        self.write_prolog_script(script_file, config_dir)
+        with open(script_file, 'a') as stream:
+            stream.write("cp {0} {1}\n".format(template, config_script))
+            stream.write("sed -i 's/^PATH_TO_REF=.*$/PATH_TO_REF={0} # edited/' {1}\n".format(ref, config_script))
+            stream.write("sed -i 's/^PATH_TO_SAMTOOLS=.*$/PATH_TO_SAMTOOLS={0} # edited/' {1}\n".format(
+                samtools_dir, config_script)
+            )
+            stream.write("sed -i 's/^PATH_TO_R=.*$/PATH_TO_R={0} # edited/' {1}\n".format(R_dir, config_script))
+            for key in self.params.keys():
+                stream.write("sed -i 's/^{0}=.*$/{0}={1} # edited/' {2}\n".format(key, self.params[key], config_script))
             stream.write(cmd)
         self.make_script_executable(script_file)
         return None

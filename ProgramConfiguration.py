@@ -4,7 +4,7 @@ from LocalSettings import *
 
 class PairedProgramConfiguration:
     """
-    A class to store configurations to benchmark a program.
+    Parent class to store benchmark configurations for one program.
     """
 
     def __init__(self, params, out):
@@ -70,7 +70,9 @@ class PairedProgramConfiguration:
 
 
 class Mutect2PairedConfiguration(PairedProgramConfiguration):
-
+    """
+    Configuration for the Mutect2 program.
+    """
     def __init__(self, params, out):
         super().__init__(params, out)
         self.path2exe = os.path.join(GATK_dir, 'GenomeAnalysisTK.jar')
@@ -98,7 +100,9 @@ class StrelkaPairedConfiguration(PairedProgramConfiguration):
     def __init__(self, params, out):
         super().__init__(params, out)
         self.path2exe = os.path.join(strelka_dir, 'strelka_workflow-1.0.14', 'bin', 'configureStrelkaWorkflow.pl')
-        self.config_ini = os.path.join(strelka_dir, 'strelka_workflow-1.0.14', 'etc', 'strelka_config_bwa_default.ini')
+        self.template_config = os.path.join(
+            strelka_dir, 'strelka_workflow-1.0.14', 'etc', 'strelka_config_bwa_default.ini'
+        )
 
     def write_scripts(self, out, ref, file1, file2):
         """
@@ -111,7 +115,7 @@ class StrelkaPairedConfiguration(PairedProgramConfiguration):
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_strelka_script(program_folder, self.path2exe, self.config_ini, ref, file1, file2)
+            config.write_strelka_script(program_folder, self.path2exe, ref, file1, file2, self.template_config)
         return None
 
 
@@ -135,4 +139,31 @@ class VirmidPairedConfiguration(PairedProgramConfiguration):
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
             config.write_virmid_script(program_folder, self.path2exe, ref, file1, file2)
+        return None
+
+
+class EBcallPairedConfiguration(PairedProgramConfiguration):
+    """
+    Configuration for the EBcall program.
+    """
+    def __init__(self, params, out):
+        super().__init__(params, out)
+        self.path2exe = os.path.join(EBcall_dir, 'ebCall_v2.sh')
+        self.template_config = os.path.join(EBcall_dir, 'config.sh')
+        self.normal_list = os.path.join(EBcall_dir, 'testdata', 'list_normal_sample.txt')
+
+    def write_scripts(self, out, ref, file1, file2):
+        """
+        Write a script for each configuration.
+        :param out: Root folder to store outputs of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        for config in self.configurations:
+            program_folder = os.path.join(out, self.out)
+            config.write_EBcall_script(
+                program_folder, self.path2exe, ref, file1, file2, self.template_config, self.normal_list
+            )
         return None
