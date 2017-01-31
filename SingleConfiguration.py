@@ -99,7 +99,7 @@ class SinglePairedConfiguration:
         :param file2: Input file for target group (e.g. tumour).
         :return: None
         """
-        script_file = os.path.join(out, self.out, 'script.sh')
+        script_file = os.path.join(out, self.out, self.script_filename)
         logging.info("Create script file: {0}".format(script_file))
         output_dir = os.path.join(out, self.out)
         config_file = os.path.join(output_dir, 'strelka_config.ini')
