@@ -1,0 +1,4 @@
+Virmid	-c=20;-C=1000
+Virmid	-c=20;-C=10000
+Virmid	-c=20;-C=100000
+Virmid	-M=200

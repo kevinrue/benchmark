@@ -166,11 +166,11 @@ class SinglePairedConfiguration:
         self.write_prolog_script(script_file, config_dir)
         with open(script_file, 'a') as stream:
             stream.write("cp {0} {1}\n".format(template, config_script))
-            stream.write("sed -i 's/^PATH_TO_REF=.*$/PATH_TO_REF={0} # edited/' {1}\n".format(ref, config_script))
-            stream.write("sed -i 's/^PATH_TO_SAMTOOLS=.*$/PATH_TO_SAMTOOLS={0} # edited/' {1}\n".format(
+            stream.write("sed -i 's|^PATH_TO_REF=.*$|PATH_TO_REF={0} # edited|' {1}\n".format(ref, config_script))
+            stream.write("sed -i 's|^PATH_TO_SAMTOOLS=.*$|PATH_TO_SAMTOOLS={0} # edited|' {1}\n".format(
                 samtools_dir, config_script)
             )
-            stream.write("sed -i 's/^PATH_TO_R=.*$/PATH_TO_R={0} # edited/' {1}\n".format(R_dir, config_script))
+            stream.write("sed -i 's|^PATH_TO_R=.*$|PATH_TO_R={0} # edited|' {1}\n".format(R_dir, config_script))
             for key in self.params.keys():
                 stream.write("sed -i 's/^{0}=.*$/{0}={1} # edited/' {2}\n".format(key, self.params[key], config_script))
             stream.write(cmd)

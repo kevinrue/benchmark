@@ -1,4 +1,2 @@
 MuTect2	--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=0.5;--normal_lod=2.2
-Strelka	isSkipDepthFilters=0;maxInputDepth=10000
-Virmid	-c=20;-C=10000
-EBCall	MAX_NORMAL_ALLELE_FREQ=0.1;MIN_MINUS_LOG10_PV=3
+MuTect2	--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_sum=20;--initial_normal_lod=1;--normal_lod=2.2

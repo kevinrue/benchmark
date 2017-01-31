@@ -99,9 +99,9 @@ class StrelkaPairedConfiguration(PairedProgramConfiguration):
     """
     def __init__(self, params, out):
         super().__init__(params, out)
-        self.path2exe = os.path.join(strelka_dir, 'strelka_workflow-1.0.14', 'bin', 'configureStrelkaWorkflow.pl')
+        self.path2exe = os.path.join(Strelka_dir, 'strelka_workflow-1.0.14', 'bin', 'configureStrelkaWorkflow.pl')
         self.template_config = os.path.join(
-            strelka_dir, 'strelka_workflow-1.0.14', 'etc', 'strelka_config_bwa_default.ini'
+            Strelka_dir, 'strelka_workflow-1.0.14', 'etc', 'strelka_config_bwa_default.ini'
         )
 
     def write_scripts(self, out, ref, file1, file2):
@@ -125,7 +125,7 @@ class VirmidPairedConfiguration(PairedProgramConfiguration):
     """
     def __init__(self, params, out):
         super().__init__(params, out)
-        self.path2exe = os.path.join(virmid_dir, 'virmid.jar')
+        self.path2exe = os.path.join(Virmid_dir, 'virmid.jar')
 
     def write_scripts(self, out, ref, file1, file2):
         """
@@ -142,15 +142,15 @@ class VirmidPairedConfiguration(PairedProgramConfiguration):
         return None
 
 
-class EBcallPairedConfiguration(PairedProgramConfiguration):
+class EBCallPairedConfiguration(PairedProgramConfiguration):
     """
     Configuration for the EBcall program.
     """
     def __init__(self, params, out):
         super().__init__(params, out)
-        self.path2exe = os.path.join(EBcall_dir, 'ebCall_v2.sh')
-        self.template_config = os.path.join(EBcall_dir, 'config.sh')
-        self.normal_list = os.path.join(EBcall_dir, 'testdata', 'list_normal_sample.txt')
+        self.path2exe = os.path.join(EBCall_dir, 'ebCall_v2.sh')
+        self.template_config = os.path.join(EBCall_dir, 'config.sh')
+        self.normal_list = os.path.join(EBCall_dir, 'testdata', 'list_normal_sample.txt')
 
     def write_scripts(self, out, ref, file1, file2):
         """

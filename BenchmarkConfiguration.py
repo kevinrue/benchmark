@@ -64,14 +64,14 @@ class PairedBenchmarkConfiguration:
         :param program: Keyword of the program to benchmark.
         :return: An object that extends the ProgramConfiguration class.
         """
-        if program == "Mutect2":
+        if program == "MuTect2":
             return Mutect2PairedConfiguration(params, program)
         elif program == "Strelka":
             return StrelkaPairedConfiguration(params, program)
         elif program == "Virmid":
             return VirmidPairedConfiguration(params, program)
-        elif program == "EBcall":
-            return EBcallPairedConfiguration(params, program)
+        elif program == "EBCall":
+            return EBCallPairedConfiguration(params, program)
         else:
             print('Invalid program keyword: {0}'.format(program))
             raise

@@ -10,9 +10,9 @@ tools_dir = os.path.join(base_dir, 'tools')
 ref_beds_dir = os.path.join(base_dir, 'ref_beds')
 
 GATK_dir = os.path.join(tools_dir, 'GATK')
-strelka_dir = os.path.join(tools_dir, 'strelka')
-virmid_dir = os.path.join(tools_dir, 'Virmid')
-EBcall_dir = os.path.join(tools_dir, 'EBCall')
+Strelka_dir = os.path.join(tools_dir, 'strelka')
+Virmid_dir = os.path.join(tools_dir, 'Virmid')
+EBCall_dir = os.path.join(tools_dir, 'EBCall')
 
 java_exe = os.path.join(appsdir, 'java', 'jdk1.8.0_latest', 'bin', 'java')
 samtools_dir = os.path.join(appsdir, 'samtools', '1.3', 'bin')
