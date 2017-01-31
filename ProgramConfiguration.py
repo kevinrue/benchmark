@@ -75,15 +75,18 @@ class Mutect2PairedConfiguration(PairedProgramConfiguration):
         super().__init__(params, out)
         self.path2exe = os.path.join(GATK_dir, 'GenomeAnalysisTK.jar')
 
-    def write_scripts(self, out, ref, files1, files2):
+    def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
         :param out: Root folder to store outputs of the program.
+        :param ref: Path to reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
         :return: None
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_mutect2_script(program_folder, self.path2exe, ref, files1, files2)
+            config.write_mutect2_script(program_folder, self.path2exe, ref, file1, file2)
         return None
 
 
@@ -97,13 +100,16 @@ class StrelkaPairedConfiguration(PairedProgramConfiguration):
         self.path2exe = os.path.join(strelka_dir, 'strelka_workflow-1.0.14', 'bin', 'configureStrelkaWorkflow.pl')
         self.config_ini = os.path.join(strelka_dir, 'strelka_workflow-1.0.14', 'etc', 'strelka_config_bwa_default.ini')
 
-    def write_scripts(self, out, ref, files1, files2):
+    def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
         :param out: Root folder to store outputs of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
         :return: None
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_strelka_script(program_folder, self.path2exe, self.config_ini, ref, files1, files2)
+            config.write_strelka_script(program_folder, self.path2exe, self.config_ini, ref, file1, file2)
         return None

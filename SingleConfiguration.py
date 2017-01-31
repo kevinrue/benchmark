@@ -53,11 +53,14 @@ class SinglePairedConfiguration:
                 stream.write("{0}\t{1}\n".format(key, self.params[key]))
         return None
 
-    def write_mutect2_script(self, out, exe, ref, files1, files2):
+    def write_mutect2_script(self, out, exe, ref, file1, file2):
         """
         Write a script to run the configuration using the Mutect2 program.
         :param out: Folder to store outputs of the program.
         :param exe: Path to executable of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
         :return: None
         """
         output_dir = os.path.join(out, self.out)
@@ -69,7 +72,7 @@ class SinglePairedConfiguration:
         cosmic = "--cosmic {0}".format(os.path.join(ref_beds_dir, 'Cosmic.vcf'))
         lexico = '-U ALLOW_SEQ_DICT_INCOMPATIBILITY'
         cmd = "{0} -Xmx25g -jar {1} -T MuTect2 -R {2} -I:tumor {3} -I:normal {4} {5} {6} -o {7} {8}".format(
-            java_exe, exe, ref, files2, files1, dbsnp, cosmic, output_vcf, lexico
+            java_exe, exe, ref, file2, file1, dbsnp, cosmic, output_vcf, lexico
         )
         for key in self.params.keys():
             cmd += " {0} {1}".format(key, self.params[key])
@@ -85,25 +88,30 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_strelka_script(self, out, exe, ini, ref, files1, files2):
+    def write_strelka_script(self, out, exe, ini, ref, file1, file2):
         """
         Write a script to run the configuration using the Mutect2 program.
         :param out: Folder to store outputs of the program.
         :param exe: Path to executable of the program.
+        :param ini: Template Strelka configuration file.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
         :return: None
         """
         script_file = os.path.join(out, self.out, 'script.sh')
         logging.info("Create script file: {0}".format(script_file))
         output_dir = os.path.join(out, self.out)
-        cmd = "{0} --normal {1} --tumor {2} --ref {3} --config {4} --output-dir {5}".format(
-            exe, files1, files2, ref, ini, output_dir
+        config_file = os.path.join(output_dir, 'strelka_config.ini')
+        cmd = "{0} --normal {1} --tumor {2} --ref {3} --config {4} --output-dir {5}\n".format(
+            exe, file1, file2, ref, config_file, output_dir
         )
-        for key in self.params.keys():
-            cmd += " {0} {1}".format(key, self.params[key])
-        cmd += "\n"
         self.write_prolog_script(script_file, output_dir)
         with open(script_file, 'a') as stream:
-            stream.write("cp {0} config.ini".format(ini))
+            stream.write("cp {0} {1}\n".format(ini, config_file))
+            for key in self.params.keys():
+                stream.write("sed -i .bak 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
+            stream.write("rm {0}.bak\n".format(config_file))
             stream.write(cmd)
             stream.write("make\n")
         return None

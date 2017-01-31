@@ -2,6 +2,7 @@
 
 # Official
 import argparse
+import logging
 
 # Custom
 from BenchmarkConfiguration import *
@@ -23,23 +24,29 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         'out', metavar='./benchmark', type=str,
-        help='Overall output folder for the benchmark'
+        help='Overall output folder for the benchmark.'
     )
     parser.add_argument(
         'ref', metavar='reference.fa',
-        help='Path to reference genome fasta'
+        help='Reference genome Fasta file.'
     )
     parser.add_argument(
         'file1', metavar='normal.bam',
-        help='Input file for reference group (e.g. normal)'
+        help='Input file for reference group (e.g. normal.bam).'
     )
     parser.add_argument(
         'file2', metavar='tumour.bam',
-        help='Input file for target group (e.g. tumour)'
+        help='Input file for target group (e.g. tumour.bam).'
+    )
+    parser.add_argument(
+        '-d', '--dry-run', action='store_true',
+        help='Dry-run: do not submit scripts as jobs.'
     )
     args = parser.parse_args()
     logging.info("Current working directory: {0}".format(os.getcwd()))
     bc = PairedBenchmarkConfiguration(args.config, args.out)
     bc.make_dir_structure()
     bc.write_scripts(args.ref, args.file1, args.file2)
-    bc.submit_scripts()
+    if not args.dry_run:
+        bc.submit_scripts()
+    logging.info('Main script completed.')

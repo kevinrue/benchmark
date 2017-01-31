@@ -66,6 +66,8 @@ class PairedBenchmarkConfiguration:
         """
         if program == "Mutect2":
             return Mutect2PairedConfiguration(params, program)
+        elif program == "Strelka":
+            return StrelkaPairedConfiguration(params, program)
         else:
             print('Invalid program keyword: {0}'.format(program))
             raise
@@ -118,13 +120,16 @@ class PairedBenchmarkConfiguration:
             program.make_dir_structure(self.out)
         return None
 
-    def write_scripts(self, ref, files1, files2):
+    def write_scripts(self, ref, file1, file2):
         """
         Write a shell script for each configuration.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
         :return: None
         """
         for program in self.configurations.values():
-            program.write_scripts(self.out, ref, files1, files2)
+            program.write_scripts(self.out, ref, file1, file2)
         return None
 
     def submit_scripts(self):

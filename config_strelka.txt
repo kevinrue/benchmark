@@ -1,0 +1,5 @@
+Strelka	isSkipDepthFilters=0;maxInputDepth=10000
+Strelka	isSkipDepthFilters=1
+Strelka	isSkipDepthFilters=0;maxInputDepth=20000
+Strelka	isSkipDepthFilters=0;maxInputDepth=50000
+Strelka	isSkipDepthFilters=0;maxInputDepth=100000
