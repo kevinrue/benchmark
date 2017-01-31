@@ -64,6 +64,7 @@ class SinglePairedConfiguration:
         script_file = os.path.join(output_dir, self.script_filename)
         logging.info("Create script file: {0}".format(script_file))
         output_vcf = os.path.join(out, self.out, 'output.vcf')
+        output_filters = os.path.join(out, self.out, 'filters.txt')
         dbsnp = "--dbsnp {0}".format(os.path.join(ref_beds_dir, 'known.vcf'))
         cosmic = "--cosmic {0}".format(os.path.join(ref_beds_dir, 'Cosmic.vcf'))
         lexico = '-U ALLOW_SEQ_DICT_INCOMPATIBILITY'
@@ -76,6 +77,11 @@ class SinglePairedConfiguration:
         cmd += "\n"
         with open(script_file, 'a') as stream:
             stream.write(cmd)
+            stream.write(
+                "awk '$0 ~ /^[^#]/ {{nFilters = split($7,filters,\";\"); for (i = 0; i < nFilters; ++i) {{print filters[i+1]}} }}' {0} | sort | uniq -c > {1}".format(
+                    output_vcf, output_filters
+                )
+            )
         self.make_script_executable(script_file)
         return None
 
