@@ -110,8 +110,7 @@ class SinglePairedConfiguration:
         with open(script_file, 'a') as stream:
             stream.write("cp {0} {1}\n".format(ini, config_file))
             for key in self.params.keys():
-                stream.write("sed -i .bak 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
-            stream.write("rm {0}.bak\n".format(config_file))
+                stream.write("sed -i 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
             stream.write(cmd)
             stream.write("make\n")
         return None
