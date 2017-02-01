@@ -40,7 +40,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-d', '--dry-run', action='store_true',
-        help='Dry-run: do not submit scripts as jobs.'
+        help='Do not submit scripts as jobs.'
     )
     args = parser.parse_args()
     logging.info("Current working directory: {0}".format(os.getcwd()))

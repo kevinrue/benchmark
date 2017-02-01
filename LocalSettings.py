@@ -13,6 +13,7 @@ GATK_dir = os.path.join(tools_dir, 'GATK')
 Strelka_dir = os.path.join(tools_dir, 'strelka')
 Virmid_dir = os.path.join(tools_dir, 'Virmid')
 EBCall_dir = os.path.join(tools_dir, 'EBCall')
+VarScan_dir = os.path.join(tools_dir, 'VarScan')
 
 java_exe = os.path.join(appsdir, 'java', 'jdk1.8.0_latest', 'bin', 'java')
 samtools_dir = os.path.join(appsdir, 'samtools', '1.3', 'bin')
