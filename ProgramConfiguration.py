@@ -69,7 +69,7 @@ class PairedProgramConfiguration:
         return None
 
 
-class Mutect2PairedConfiguration(PairedProgramConfiguration):
+class MuTect2PairedConfiguration(PairedProgramConfiguration):
     """
     Configuration for the Mutect2 program.
     """
@@ -88,7 +88,7 @@ class Mutect2PairedConfiguration(PairedProgramConfiguration):
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_mutect2_script(program_folder, self.path2exe, ref, file1, file2)
+            config.write_MuTect2_script(program_folder, self.path2exe, ref, file1, file2)
         return None
 
 
@@ -115,7 +115,7 @@ class StrelkaPairedConfiguration(PairedProgramConfiguration):
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_strelka_script(program_folder, self.path2exe, ref, file1, file2, self.template_config)
+            config.write_Strelka_script(program_folder, self.path2exe, ref, file1, file2, self.template_config)
         return None
 
 
@@ -138,7 +138,7 @@ class VirmidPairedConfiguration(PairedProgramConfiguration):
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_virmid_script(program_folder, self.path2exe, ref, file1, file2)
+            config.write_Virmid_script(program_folder, self.path2exe, ref, file1, file2)
         return None
 
 
@@ -163,7 +163,30 @@ class EBCallPairedConfiguration(PairedProgramConfiguration):
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_EBcall_script(
+            config.write_EBCall_script(
                 program_folder, self.path2exe, ref, file1, file2, self.template_config, self.normal_list
             )
+        return None
+
+
+class VarScanPairedConfiguration(PairedProgramConfiguration):
+    """
+    Configuration for the VarScan program.
+    """
+    def __init__(self, params, out):
+        super().__init__(params, out)
+        self.path2exe = os.path.join(VarScan_dir, 'VarScan.v2.3.9.jar')
+
+    def write_scripts(self, out, ref, file1, file2):
+        """
+        Write a script for each configuration.
+        :param out: Root folder to store outputs of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        for config in self.configurations:
+            program_folder = os.path.join(out, self.out)
+            config.write_VarScan_script(program_folder, self.path2exe, ref, file1, file2)
         return None

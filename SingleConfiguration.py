@@ -53,7 +53,7 @@ class SinglePairedConfiguration:
                 stream.write("{0}\t{1}\n".format(key, self.params[key]))
         return None
 
-    def write_mutect2_script(self, out, exe, ref, file1, file2):
+    def write_MuTect2_script(self, out, exe, ref, file1, file2):
         """
         Write a script to run the configuration using the Mutect2 program.
         :param out: Folder to store outputs of the program.
@@ -88,7 +88,7 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_strelka_script(self, out, exe, ref, file1, file2, template):
+    def write_Strelka_script(self, out, exe, ref, file1, file2, template):
         """
         Write a script to run the configuration using the Mutect2 program.
         :param out: Folder to store outputs of the program.
@@ -118,7 +118,7 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_virmid_script(self, out, exe, ref, file1, file2):
+    def write_Virmid_script(self, out, exe, ref, file1, file2):
         """
         Write a script to run the configuration using the Mutect2 program.
         :param out: Folder to store outputs of the program.
@@ -143,7 +143,7 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_EBcall_script(self, out, exe, ref, file1, file2, template, normal_list):
+    def write_EBCall_script(self, out, exe, ref, file1, file2, template, normal_list):
         """
         Write a script to run the configuration using the Mutect2 program.
         :param out: Folder to store outputs of the program.
@@ -173,6 +173,31 @@ class SinglePairedConfiguration:
             stream.write("sed -i 's|^PATH_TO_R=.*$|PATH_TO_R={0} # edited|' {1}\n".format(R_dir, config_script))
             for key in self.params.keys():
                 stream.write("sed -i 's/^{0}=.*$/{0}={1} # edited/' {2}\n".format(key, self.params[key], config_script))
+            stream.write(cmd)
+        self.make_script_executable(script_file)
+        return None
+
+    def write_VarScan_script(self, out, exe, ref, file1, file2):
+        """
+        Write a script to run the configuration using the VarScan program.
+        :param out: Folder to store outputs of the program.
+        :param exe: Path to executable of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        output_dir = os.path.join(out, self.out)
+        script_file = os.path.join(output_dir, self.script_filename)
+        output_basename = os.path.join(output_dir, 'output')
+        logging.info("Create script file: {0}".format(script_file))
+        cmd_samtools = "{0} mpileup -f {1} {2} {3}".format(samtools_exe, ref, file1, file2)
+        cmd_VarScan = "{0} -Xmx25g -jar {1} somatic {2} --mpileup 1".format(java_exe, exe, output_basename)
+        for key in self.params.keys():
+            cmd_VarScan += " {0} {1}".format(key, self.params[key])
+            self.write_prolog_script(script_file, output_dir)
+        cmd = "{0} | {1}\n".format(cmd_samtools, cmd_VarScan)
+        with open(script_file, 'a') as stream:
             stream.write(cmd)
         self.make_script_executable(script_file)
         return None

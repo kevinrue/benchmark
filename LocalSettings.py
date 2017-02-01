@@ -19,3 +19,4 @@ java_exe = os.path.join(appsdir, 'java', 'jdk1.8.0_latest', 'bin', 'java')
 samtools_dir = os.path.join(appsdir, 'samtools', '1.3', 'bin')
 R_dir = os.path.join(appsdir, 'R', '3.3.0', 'bin')
 
+samtools_exe = os.path.join(samtools_dir, 'samtools')

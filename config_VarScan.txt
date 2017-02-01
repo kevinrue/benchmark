@@ -1,0 +1,4 @@
+VarScan	--tumor-purity=0.01
+VarScan	--tumor-purity=0.01;--strand-filter=1
+VarScan	--tumor-purity=0.01;--validation=1
+VarScan	--tumor-purity=0.01;--p-value=0.05
