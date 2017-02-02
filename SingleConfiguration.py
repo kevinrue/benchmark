@@ -266,7 +266,11 @@ class SinglePairedConfiguration:
                     cmd_setup += " {0}".format(self.params[key])
         cmd_setup += "\n"
         with open(script, 'a') as stream:
+            # CaVEMan wants all steps to be run in the same working directory as the Setup step
+            # qsub jobs are launched from the $HOME directory
+            stream.write("cd $HOME\n")
             stream.write(cmd_setup)
+            stream.write("cd -\n")
         self.make_script_executable(script)
         return None
 
@@ -353,8 +357,8 @@ class SinglePairedConfiguration:
             [
                 'qsub',
                 '-t', "1-{0}".format(fai_entries),
-                '-o', os.path.join(qsub_dir, 'setup.out'),
-                '-e', os.path.join(qsub_dir, 'setup.err'),
+                '-o', os.path.join(qsub_dir, '01_split.out'),
+                '-e', os.path.join(qsub_dir, '01_split.err'),
                 '-N', "setup_{0}".format(self.index),
                 '-q', 'short.qc',
                 split_script_file
