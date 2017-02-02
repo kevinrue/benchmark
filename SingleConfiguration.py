@@ -253,7 +253,7 @@ class SinglePairedConfiguration:
         split_file = os.path.join(out, 'splitList')
         alg_bean_file = os.path.join(out, 'alg_bean')
         cmd_setup = "{0} setup -t {1} -n {2} -r {3} -c {4} -f {5} -l {6} -a {7}".format(
-            exe, file2, file1, ref, config_file, output_folder, split_file, alg_bean_file
+            exe, file2, file1, "{0}.fai".format(ref), config_file, output_folder, split_file, alg_bean_file
         )
         # Fail-safe: 'setup:-g' should have been added automatically if not specified in the config file
         # See BenchmarkConfiguration.select_program_config(...)
