@@ -199,6 +199,14 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
     def __init__(self, params, out):
         super().__init__(params, out)
         self.path2exe = os.path.join(CaVEMan_dir, 'bin', 'caveman')
+        self.setup_script = '01_setup_script.sh'
+        self.split_script = '02_split_script.sh'
+        self.merge_split_script = '03_merge_split_script.sh'
+        self.Mstep_script = '04_Mstep_script.sh'
+        self.merge_script = '05_merge_script.sh'
+        self.Estep_script = '06_Estep_script.sh'
+        self.config_file = 'caveman.cfg.ini'
+        self.qsub_dir = 'qsub'
 
     def add_configuration(self, params):
         """
@@ -227,7 +235,9 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_CaVEMan_scripts(program_folder, self.path2exe, ref, file1, file2)
+            config.write_CaVEMan_scripts(
+                program_folder, self.path2exe, ref, file1, file2, self.qsub_dir, self.setup_script, self.config_file
+            )
         return None
 
     def submit_scripts(self, out):
