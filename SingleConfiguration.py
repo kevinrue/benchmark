@@ -77,7 +77,7 @@ class SinglePairedConfiguration:
             java_exe, exe, ref, file2, file1, dbsnp, cosmic, output_vcf, lexico
         )
         for key in self.params.keys():
-            if not self.params[key]:
+            if self.params[key] is None:
                 raise ValueError("MuTect2 does not support flags without value: {0}".format(key))
             cmd += " {0} {1}".format(key, self.params[key])
             self.write_prolog_script(script_file, output_dir)
@@ -116,7 +116,7 @@ class SinglePairedConfiguration:
         with open(script_file, 'a') as stream:
             stream.write("cp {0} {1}\n".format(template, config_file))
             for key in self.params.keys():
-                if not self.params[key]:
+                if self.params[key] is None:
                     raise ValueError("Strelka does not support flags without value: {0}".format(key))
                 stream.write("sed -i 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
             stream.write(cmd)
@@ -142,7 +142,7 @@ class SinglePairedConfiguration:
             java_exe, exe, ref, file2, file1, output_dir
         )
         for key in self.params.keys():
-            if not self.params[key]:
+            if self.params[key] is None:
                 raise ValueError("Virmid does not support flags without value: {0}".format(key))
             cmd += " {0} {1}".format(key, self.params[key])
             self.write_prolog_script(script_file, output_dir)
@@ -181,7 +181,7 @@ class SinglePairedConfiguration:
             )
             stream.write("sed -i 's|^PATH_TO_R=.*$|PATH_TO_R={0} # edited|' {1}\n".format(R_dir, config_script))
             for key in self.params.keys():
-                if not self.params[key]:
+                if self.params[key] is None:
                     raise ValueError("EBCall does not support flags without value: {0}".format(key))
                 stream.write("sed -i 's/^{0}=.*$/{0}={1} # edited/' {2}\n".format(key, self.params[key], config_script))
             stream.write(cmd)
@@ -205,7 +205,7 @@ class SinglePairedConfiguration:
         cmd_samtools = "{0} mpileup -f {1} {2} {3}".format(samtools_exe, ref, file1, file2)
         cmd_VarScan = "{0} -Xmx25g -jar {1} somatic {2} --mpileup 1".format(java_exe, exe, output_basename)
         for key in self.params.keys():
-            if not self.params[key]:
+            if self.params[key] is None:
                 raise ValueError("VarScan does not support flags without value: {0}".format(key))
             cmd_VarScan += " {0} {1}".format(key, self.params[key])
             self.write_prolog_script(script_file, output_dir)
@@ -228,14 +228,34 @@ class SinglePairedConfiguration:
         output_dir = os.path.join(out, self.out)
         script_file = os.path.join(output_dir, self.script_filename)
         config_file = os.path.join(output_dir, 'caveman.cfg.ini')
+        split_script = os.path.join(output_dir, 'split_script.sh')
+        qsub_dir = os.path.join(output_dir, 'qsub')
+        ref_fai = "{0}.fai".format(ref)
+        with open(ref_fai) as stream:
+            fai_entries = len(stream.readlines())
         logging.info("Create script file: {0}".format(script_file))
         self.write_prolog_script(script_file, output_dir)
         self.write_CaVEMan_setup_command(script_file, exe, ref, file1, file2, config_file)
-        #-f /gpfs2/well/ratcliff/data/kevin/CaVEMan-manual/analysis -l /gpfs2/well/ratcliff/data/kevin/CaVEMan-manual/splitList -a /gpfs2/well/ratcliff/data/kevin/CaVEMan-manual/alg_bean
+        logging.info("Create qsub output folder: {0}".format(qsub_dir))
+        os.mkdir(qsub_dir)
+        self.write_CaVEMan_split_script(split_script, exe, config_file, qsub_dir)
+        with open(script_file, 'a') as stream:
+            stream.write("qsub -t 1-{0} -o {1} -e {1} -q {2} -N {3} -pe shmem {4} {5}".format(
+                fai_entries, '/dev/null', 'short.qc', 'split-CaVEMan', str(self.n_cores), split_script)
+            )
         return None
 
     def write_CaVEMan_setup_command(self, script, exe, ref, file1, file2, config_file):
+        """
 
+        :param script:
+        :param exe:
+        :param ref:
+        :param file1:
+        :param file2:
+        :param config_file:
+        :return:
+        """
         cmd_setup = "{0} setup -t {1} -n {2} -r {3} -f {4}".format(exe, file2, file1, ref, config_file)
         # Fail-safe: 'setup:-g' should have been added automatically if not specified in the config file
         # See BenchmarkConfiguration.select_program_config(...)
@@ -249,6 +269,30 @@ class SinglePairedConfiguration:
         cmd_setup += "\n"
         with open(script, 'a') as stream:
             stream.write(cmd_setup)
+        return None
+
+    def write_CaVEMan_split_script(self, script, exe, config_file, qsub_dir):
+        """
+
+        :param script:
+        :param exe:
+        :param config_file:
+        :param qsub_dir:
+        :return:
+        """
+        stdout_file = os.path.join(qsub_dir, 'stdout.split.${SGE_TASK_ID}.log')
+        stderr_file = os.path.join(qsub_dir, 'stderr.split.${SGE_TASK_ID}.log')
+        cmd_split = "{0} split -i $SGE_TASK_ID -f {1}".format(exe, config_file)
+        for key in self.params.keys():
+            if key.startswith('split:'):
+                cmd_split += " {0}".format(key.replace('split:', ''))
+                if self.params[key] is None:
+                    raise ValueError("CaVEMan split step does not support flags without value: {0}".format(key))
+                cmd_split += " {0}".format(self.params[key])
+        cmd_split += " 1>{0} 2>{1}\n".format(stdout_file, stderr_file)
+        with open(script, 'w') as stream:
+            stream.write("#!/bin/bash\n")
+            stream.write(cmd_split)
         return None
 
     @staticmethod
