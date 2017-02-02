@@ -49,8 +49,10 @@ class SinglePairedConfiguration:
         config_file = os.path.join(out, self.config_filename)
         logging.info("Create configuration log file: {0}".format(config_file))
         with open(config_file, 'w') as stream:
-            for key in self.params.keys():
-                stream.write("{0}\t{1}\n".format(key, self.params[key]))
+            for (k, v) in self.params.items():
+                if v is None:
+                    v = 'NA'
+                stream.write("{0}\t{1}\n".format(k, v))
         return None
 
     def write_MuTect2_script(self, out, exe, ref, file1, file2):
@@ -75,6 +77,8 @@ class SinglePairedConfiguration:
             java_exe, exe, ref, file2, file1, dbsnp, cosmic, output_vcf, lexico
         )
         for key in self.params.keys():
+            if not self.params[key]:
+                raise ValueError("MuTect2 does not support flags without value: {0}".format(key))
             cmd += " {0} {1}".format(key, self.params[key])
             self.write_prolog_script(script_file, output_dir)
         cmd += "\n"
@@ -103,17 +107,20 @@ class SinglePairedConfiguration:
         logging.info("Create script file: {0}".format(script_file))
         config_dir = os.path.join(out, self.out)
         config_file = os.path.join(config_dir, 'strelka_config.ini')
-        output_dir = os.path.join(config_dir, 'analysis')
+        output_basedir = 'analysis'
+        output_fulldir = os.path.join(config_dir, output_basedir)
         cmd = "{0} --normal {1} --tumor {2} --ref {3} --config {4} --output-dir {5}\n".format(
-            exe, file1, file2, ref, config_file, output_dir
+            exe, file1, file2, ref, config_file, output_fulldir
         )
         self.write_prolog_script(script_file, config_dir)
         with open(script_file, 'a') as stream:
             stream.write("cp {0} {1}\n".format(template, config_file))
             for key in self.params.keys():
+                if not self.params[key]:
+                    raise ValueError("Strelka does not support flags without value: {0}".format(key))
                 stream.write("sed -i 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
             stream.write(cmd)
-            stream.write("cd {0}\n".format(output_dir))
+            stream.write("cd {0}\n".format(output_basedir))
             stream.write("make\n")
         self.make_script_executable(script_file)
         return None
@@ -135,6 +142,8 @@ class SinglePairedConfiguration:
             java_exe, exe, ref, file2, file1, output_dir
         )
         for key in self.params.keys():
+            if not self.params[key]:
+                raise ValueError("Virmid does not support flags without value: {0}".format(key))
             cmd += " {0} {1}".format(key, self.params[key])
             self.write_prolog_script(script_file, output_dir)
         cmd += "\n"
@@ -172,6 +181,8 @@ class SinglePairedConfiguration:
             )
             stream.write("sed -i 's|^PATH_TO_R=.*$|PATH_TO_R={0} # edited|' {1}\n".format(R_dir, config_script))
             for key in self.params.keys():
+                if not self.params[key]:
+                    raise ValueError("EBCall does not support flags without value: {0}".format(key))
                 stream.write("sed -i 's/^{0}=.*$/{0}={1} # edited/' {2}\n".format(key, self.params[key], config_script))
             stream.write(cmd)
         self.make_script_executable(script_file)
@@ -194,6 +205,8 @@ class SinglePairedConfiguration:
         cmd_samtools = "{0} mpileup -f {1} {2} {3}".format(samtools_exe, ref, file1, file2)
         cmd_VarScan = "{0} -Xmx25g -jar {1} somatic {2} --mpileup 1".format(java_exe, exe, output_basename)
         for key in self.params.keys():
+            if not self.params[key]:
+                raise ValueError("VarScan does not support flags without value: {0}".format(key))
             cmd_VarScan += " {0} {1}".format(key, self.params[key])
             self.write_prolog_script(script_file, output_dir)
         cmd = "{0} | {1}\n".format(cmd_samtools, cmd_VarScan)
@@ -202,16 +215,53 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
+    def write_CaVEMan_script(self, out, exe, ref, file1, file2):
+        """
+        Write a script to run the configuration using the VarScan program.
+        :param out: Folder to store outputs of the program.
+        :param exe: Path to executable of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        output_dir = os.path.join(out, self.out)
+        script_file = os.path.join(output_dir, self.script_filename)
+        config_file = os.path.join(output_dir, 'caveman.cfg.ini')
+        logging.info("Create script file: {0}".format(script_file))
+        self.write_prolog_script(script_file, output_dir)
+        self.write_CaVEMan_setup_command(script_file, exe, ref, file1, file2, config_file)
+        #-f /gpfs2/well/ratcliff/data/kevin/CaVEMan-manual/analysis -l /gpfs2/well/ratcliff/data/kevin/CaVEMan-manual/splitList -a /gpfs2/well/ratcliff/data/kevin/CaVEMan-manual/alg_bean
+        return None
+
+    def write_CaVEMan_setup_command(self, script, exe, ref, file1, file2, config_file):
+
+        cmd_setup = "{0} setup -t {1} -n {2} -r {3} -f {4}".format(exe, file2, file1, ref, config_file)
+        # Fail-safe: 'setup:-g' should have been added automatically if not specified in the config file
+        # See BenchmarkConfiguration.select_program_config(...)
+        if not 'setup:-g' in self.params.keys():
+            raise ValueError('"setup:-g" not found in parameters. Please contact maintainer.')
+        for key in self.params.keys():
+            if key.startswith('setup:'):
+                cmd_setup += " {0}".format(key.replace('setup:', ''))
+                if not self.params[key] is None:
+                    cmd_setup += " {0}".format(self.params[key])
+        cmd_setup += "\n"
+        with open(script, 'a') as stream:
+            stream.write(cmd_setup)
+        return None
+
     @staticmethod
     def write_prolog_script(script, out):
         """
         Write common prolog of benchmark scripts.
         :param script: Filename of the script file to write.
-        :param out: Folder to store outputs of the configuration benchmark.
+        :param out: Folder to store outputs of the configuration.
         :return: None
         """
         with open(script, 'w') as stream:
             stream.write("#!/bin/bash\n")
+            stream.write("cd {0}\n".format(out))
         return None
 
     @staticmethod

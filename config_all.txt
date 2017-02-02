@@ -2,3 +2,5 @@ MuTect2	--max_alt_allele_in_normal_count=1;--max_alt_alleles_in_normal_qscore_su
 Strelka	isSkipDepthFilters=0;maxInputDepth=10000
 Virmid	-c=20;-C=10000
 EBCall	MAX_NORMAL_ALLELE_FREQ=0.1;MIN_MINUS_LOG10_PV=3
+VarScan	--tumor-purity=0.01;--strand-filter=1
+CaVEMan	setup:-g=./ignore_file.tsv;setup:-w

@@ -2,7 +2,6 @@
 
 # Official
 import argparse
-import logging
 
 # Custom
 from BenchmarkConfiguration import *
@@ -18,9 +17,10 @@ if __name__ == '__main__':
         'config', metavar='config.txt', type=str,
         help='A file of programs and configurations to run. The file is TAB-separated.'
              ' Column 1 must be one of the following program names:'
-             ' {Mutect2, Strelka}.'
-             ' Column 2 must be a semicolon-separated list of --flag=value pairs.'
-             ' Those pairs are subsequently adapted to the program command line format.'
+             ' {MuTect2, Strelka, Virmid, EBCall, VarScan, CaVEMan}.'
+             ' Column 2 must be a semicolon-separated list of "flag=value" pairs (unquoted); except for "flag"-only'
+             ' toggle options (e.g. "--flag1=value1;-flag2=value3;--flag3;flag4=value4").'
+             ' Those flags and values (where applicable) are subsequently adapted to the program command line format.'
     )
     parser.add_argument(
         'out', metavar='./benchmark', type=str,

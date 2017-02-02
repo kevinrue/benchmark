@@ -1,0 +1,3 @@
+CaVEMan	setup:-g=./ignore_file.tsv
+CaVEMan	setup:-g=./ignore_file.tsv;setup:-w
+CaVEMan	setup:-w

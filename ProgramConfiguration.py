@@ -190,3 +190,42 @@ class VarScanPairedConfiguration(PairedProgramConfiguration):
             program_folder = os.path.join(out, self.out)
             config.write_VarScan_script(program_folder, self.path2exe, ref, file1, file2)
         return None
+
+
+class CaVEManPairedConfiguration(PairedProgramConfiguration):
+    """
+    Configuration for the VarScan program.
+    """
+    def __init__(self, params, out):
+        super().__init__(params, out)
+        self.path2exe = os.path.join(VarScan_dir, 'bin', 'caveman')
+
+    def add_configuration(self, params):
+        """
+        Add a configuration (CaVEMan requires a specific add configuration).
+        :param params: Dictionary of parameter flags and values.
+        :return: None
+        """
+        config_index = len(self.configurations)+1
+        # '-g' is a mandatory argument of CaVEMan (Location of tsv ignore regions file)
+        # Other programs do not require (or even support) this type of file
+        # Therefore, this benchmark framework makes this file an optional input
+        # (an empty file is given if not specified)
+        if 'setup:-g' not in params.keys():
+            logging.info("CaVEMan: config_{0} adding setup:-g=/dev/null in params".format(config_index))
+            params['setup:-g'] = '/dev/null'
+        self.configurations.append(SinglePairedConfiguration(params, config_index))
+
+    def write_scripts(self, out, ref, file1, file2):
+        """
+        Write a script for each configuration.
+        :param out: Root folder to store outputs of the program.
+        :param ref: Reference genome Fasta file.
+        :param file1: Input file for reference group (e.g. normal).
+        :param file2: Input file for target group (e.g. tumour).
+        :return: None
+        """
+        for config in self.configurations:
+            program_folder = os.path.join(out, self.out)
+            config.write_CaVEMan_script(program_folder, self.path2exe, ref, file1, file2)
+        return None

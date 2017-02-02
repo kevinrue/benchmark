@@ -57,6 +57,24 @@ class PairedBenchmarkConfiguration:
         return 1
 
     @staticmethod
+    def parse_params(params):
+        """
+        Parse benchmark parameters. Expected format: '--flag1=value1;-flag2=value2;...'.
+        :type params: str
+        :param params: Parameters to supply to the program.
+        :return: None
+        """
+        parsed_params = {}
+        keys_values = params.split(';')
+        for kv in keys_values:
+            if '=' in kv:
+                (k, v) = kv.split('=')
+            else:
+                (k, v) = (kv, None)
+            parsed_params[k] = v
+        return parsed_params
+
+    @staticmethod
     def select_program_config(params, program):
         """
         Create a ProgramConfiguration object adapted to a given program.
@@ -74,27 +92,11 @@ class PairedBenchmarkConfiguration:
             return EBCallPairedConfiguration(params, program)
         elif program == "VarScan":
             return VarScanPairedConfiguration(params, program)
+        elif program == "CaVEMan":
+            return CaVEManPairedConfiguration(params, program)
         else:
             print('Invalid program keyword: {0}'.format(program))
             raise
-
-    @staticmethod
-    def parse_params(params):
-        """
-        Parse benchmark parameters. Expected format: '--flag1=value1;-flag2=value2;...'.
-        :type params: str
-        :param params: Parameters to supply to the program.
-        :return: None
-        """
-        parsed_params = {}
-        keys_values = params.split(';')
-        for kv in keys_values:
-            try:
-                (k, v) = kv.split('=')
-            except ValueError:
-                raise ValueError("Failed to split flag=value pair: {0}".format(kv))
-            parsed_params[k] = v
-        return parsed_params
 
     def make_dir_structure(self):
         """
