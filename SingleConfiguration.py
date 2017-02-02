@@ -312,8 +312,6 @@ class SinglePairedConfiguration:
         """
         split_file = os.path.join(out, 'splitList')
         tmp_split_files = "{0}.*".format(split_file)
-        stdout_file = os.path.join(qsub_dir, 'out.merge-split.${SGE_TASK_ID}')
-        stderr_file = os.path.join(qsub_dir, 'err.merge-split.${SGE_TASK_ID}')
         with open(script, 'a') as stream:
             stream.write("ls -1 {0} | xargs\n".format(tmp_split_files))
             stream.write("cat {0} > {1}\n".format(tmp_split_files, split_file))
@@ -387,13 +385,13 @@ class SinglePairedConfiguration:
         pattern_job_id = re.compile('.* (\d+)[ .].*')
         # Split
         split_cmd_args = [
-                'qsub',
-                '-t', "1-{0}".format(fai_entries),
-                '-o', os.path.join(qsub_dir, '02_split.out'),
-                '-e', os.path.join(qsub_dir, '02_split.err'),
-                '-N', "setup_{0}".format(self.index),
-                '-q', 'short.qc',
-                split_script_file
+            'qsub',
+            '-t', "1-{0}".format(fai_entries),
+            '-o', os.path.join(qsub_dir, '02_split.out'),
+            '-e', os.path.join(qsub_dir, '02_split.err'),
+            '-N', "setup_{0}".format(self.index),
+            '-q', 'short.qc',
+            split_script_file
             ]
         logging.info("Submit command: {0}".format(' '.join(split_cmd_args)))
         setup_stdout, err = subprocess.Popen(split_cmd_args, stdout=subprocess.PIPE).communicate()
@@ -402,13 +400,13 @@ class SinglePairedConfiguration:
         logging.info("split_{0} JOB_ID: {1}".format(self.index, setup_job_id))
         # Merge splits
         merge_splits_cmd_args = [
-                'qsub',
-                '-hold_jid', setup_job_id, # hold until setup completed
-                '-o', os.path.join(qsub_dir, '03_merge-splits.out'),
-                '-e', os.path.join(qsub_dir, '03_merge-splits.err'),
-                '-N', "setup_{0}".format(self.index),
-                '-q', 'short.qc',
-                split_script_file
+            'qsub',
+            '-hold_jid', setup_job_id, # hold until setup completed
+            '-o', os.path.join(qsub_dir, '03_merge-splits.out'),
+            '-e', os.path.join(qsub_dir, '03_merge-splits.err'),
+            '-N', "setup_{0}".format(self.index),
+            '-q', 'short.qc',
+            merge_splits_script_file
             ]
         logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
         merge_splits_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
