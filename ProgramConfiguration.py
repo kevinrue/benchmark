@@ -235,6 +235,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         :return: None
         """
         self.ref_fai = "{0}.fai".format(ref)
+        logging.info("Fasta index file: {0}".format(self.ref_fai))
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
             config.write_CaVEMan_scripts(
