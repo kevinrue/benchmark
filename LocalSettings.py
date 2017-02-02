@@ -1,7 +1,8 @@
 import os
 
 home_dir = '/gpfs2/well/ratcliff'
-appsdir='/apps/well'
+appsdir = '/apps/well'
+qsub_exe = '/gpfs0/mgmt/sge/6.2u5/bin/lx26-amd64/qsub'
 
 base_dir = os.path.join(home_dir, 'pipeline')
 

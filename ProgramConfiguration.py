@@ -198,7 +198,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
     """
     def __init__(self, params, out):
         super().__init__(params, out)
-        self.path2exe = os.path.join(VarScan_dir, 'bin', 'caveman')
+        self.path2exe = os.path.join(CaVEMan_dir, 'bin', 'caveman')
 
     def add_configuration(self, params):
         """

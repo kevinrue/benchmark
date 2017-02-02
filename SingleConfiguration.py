@@ -240,8 +240,9 @@ class SinglePairedConfiguration:
         os.mkdir(qsub_dir)
         self.write_CaVEMan_split_script(split_script, exe, config_file, qsub_dir)
         with open(script_file, 'a') as stream:
-            stream.write("qsub -t 1-{0} -o {1} -e {1} -q {2} -N {3} -pe shmem {4} {5}".format(
-                fai_entries, '/dev/null', 'short.qc', 'split_{0}'.format(self.index), str(self.n_cores), split_script)
+            stream.write("{6} -t 1-{0} -o {1} -e {1} -q {2} -N {3} -pe shmem {4} {5}".format(
+                fai_entries, '/dev/null', 'short.qc', 'split_{0}'.format(self.index), str(self.n_cores), split_script,
+                qsub_exe)
             )
         return None
 
