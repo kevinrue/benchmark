@@ -350,7 +350,7 @@ class SinglePairedConfiguration:
         merge_script_file = os.path.join(output_dir, '05_merge_script.sh')
         Estep_script_file = os.path.join(output_dir, '06_Estep_script.sh')
         qsub_dir = os.path.join(output_dir, 'qsub')
-        pattern_job_id = re.compile('.* (\d+)\..*')
+        pattern_job_id = re.compile('.* (\d+)[ .].*')
         setup_stdout, err = subprocess.Popen(
             [
                 'qsub', '-o', os.path.join(qsub_dir, 'setup.out'),
@@ -360,8 +360,8 @@ class SinglePairedConfiguration:
                 setup_script_file
             ],
             stdout=subprocess.PIPE).communicate()
-        print("setup_stdout")
-        print(setup_stdout)
+        print("setup_stdout.decode(\"utf-8\")")
+        print(setup_stdout.decode("utf-8"))
         print("err")
         print(err)
         setup_job_id = pattern_job_id.match(setup_stdout.decode("utf-8")).group(1)
