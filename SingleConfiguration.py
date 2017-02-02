@@ -220,12 +220,13 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_CaVEMan_scripts(self, out, exe, ref, file1, file2, qsub_base, setup_base, config_file_base):
+    def write_CaVEMan_scripts(self, out, exe, ref, file1, file2, qsub_base, config_file_base, setup_base, split_base):
         """
         Write a script to run the configuration using the VarScan program.
         """
         output_dir = os.path.join(out, self.out)
         setup_script_file = os.path.join(output_dir, setup_base)
+        split_script_file = os.path.join(output_dir, split_base)
         qsub_dir = os.path.join(output_dir, qsub_base)
         config_file = os.path.join(output_dir, config_file_base)
         ref_fai = "{0}.fai".format(ref)
@@ -236,11 +237,13 @@ class SinglePairedConfiguration:
             logging.info("# fai_entries: {0}".format(fai_entries))
         self.write_prolog_script(setup_script_file)
         self.write_setup_script(setup_script_file, exe, ref, file1, file2, config_file, output_dir)
+        self.write_prolog_script(split_script_file)
+        self.write_CaVEMan_split_script(split_script_file, exe, config_file, qsub_dir)
         return None
 
     def write_setup_script(self, script, exe, ref, file1, file2, config_file, out):
         """
-
+        Write a script to run the setup step of CaVEMan.
         :param script:
         :param exe:
         :param ref:
@@ -271,21 +274,20 @@ class SinglePairedConfiguration:
         self.make_script_executable(script)
         return None
 
-    # def write_CaVEMan_split_script(self, script, exe, config_file, qsub_dir):
-    #     stdout_file = os.path.join(qsub_dir, 'stdout.split.${SGE_TASK_ID}.log')
-    #     stderr_file = os.path.join(qsub_dir, 'stderr.split.${SGE_TASK_ID}.log')
-    #     cmd_split = "{0} split -i $SGE_TASK_ID -f {1}".format(exe, config_file)
-    #     for key in self.params.keys():
-    #         if key.startswith('split:'):
-    #             cmd_split += " {0}".format(key.replace('split:', ''))
-    #             if self.params[key] is None:
-    #                 raise ValueError("CaVEMan split step does not support flags without value: {0}".format(key))
-    #             cmd_split += " {0}".format(self.params[key])
-    #     cmd_split += " 1>{0} 2>{1}\n".format(stdout_file, stderr_file)
-    #     with open(script, 'w') as stream:
-    #         stream.write("#!/bin/bash\n")
-    #         stream.write(cmd_split)
-    #     return None
+    def write_CaVEMan_split_script(self, script, exe, config_file, qsub_dir):
+        stdout_file = os.path.join(qsub_dir, 'out.split.${SGE_TASK_ID}')
+        stderr_file = os.path.join(qsub_dir, 'err.split.${SGE_TASK_ID}')
+        cmd_split = "{0} split -i $SGE_TASK_ID -f {1}".format(exe, config_file)
+        for key in self.params.keys():
+            if key.startswith('split:'):
+                cmd_split += " {0}".format(key.replace('split:', ''))
+                if self.params[key] is None:
+                    raise ValueError("CaVEMan split step does not support flags without value: {0}".format(key))
+                cmd_split += " {0}".format(self.params[key])
+        cmd_split += " 1>{0} 2>{1}\n".format(stdout_file, stderr_file)
+        with open(script, 'a') as stream:
+            stream.write(cmd_split)
+        return None
 
     @staticmethod
     def write_prolog_script(script):
@@ -332,31 +334,30 @@ class SinglePairedConfiguration:
         subprocess.call(qsub_cmd_args)
         return None
 
-    def submit_CaVEMan_scripts(self, out, setup_base):
+    def submit_CaVEMan_scripts(self, out, setup_base, split_base):
         """
         :param out: Folder to store outputs of the program.
         :return: None
         """
         output_dir = os.path.join(out, self.out)
         setup_script_file = os.path.join(output_dir, setup_base)
+        split_script_file = os.path.join(output_dir, split_base)
         logging.info("Submit command: {0}".format(setup_script_file))
+        # Setup
         subprocess.call([setup_script_file])
-        # pattern_job_id = re.compile('.* (\d+)[ .].*')
-        # setup_stdout, err = subprocess.Popen(
-        #     [
-        #         'qsub', '-o', os.path.join(qsub_dir, 'setup.out'),
-        #         '-e', os.path.join(qsub_dir, 'setup.err'),
-        #         '-N', "setup_{0}".format(self.index),
-        #         '-q', 'short.qc',
-        #         setup_script_file
-        #     ],
-        #     stdout=subprocess.PIPE).communicate()
-        # print("setup_stdout.decode(\"utf-8\")")
-        # print(setup_stdout.decode("utf-8"))
-        # print("err")
-        # print(err)
-        # setup_job_id = pattern_job_id.match(setup_stdout.decode("utf-8")).group(1)
-        # logging.info("setup_{0} JOB_ID: {1}".format(self.index, setup_job_id))
+        pattern_job_id = re.compile('.* (\d+)[ .].*')
+        # Split
+        setup_stdout, err = subprocess.Popen(
+            [
+                'qsub', '-o', os.path.join(qsub_dir, 'setup.out'),
+                '-e', os.path.join(qsub_dir, 'setup.err'),
+                '-N', "setup_{0}".format(self.index),
+                '-q', 'short.qc',
+                split_script_file
+            ],
+            stdout=subprocess.PIPE).communicate()
+        setup_job_id = pattern_job_id.match(setup_stdout.decode("utf-8")).group(1)
+        logging.info("split_{0} JOB_ID: {1}".format(self.index, setup_job_id))
         return None
 
 # def parse_job_id():
