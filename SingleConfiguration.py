@@ -268,6 +268,7 @@ class SinglePairedConfiguration:
         cmd_setup += "\n"
         with open(script, 'a') as stream:
             stream.write(cmd_setup)
+        self.make_script_executable(script)
         return None
 
     # def write_CaVEMan_split_script(self, script, exe, config_file, qsub_dir):
