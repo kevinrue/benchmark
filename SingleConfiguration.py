@@ -334,12 +334,13 @@ class SinglePairedConfiguration:
         subprocess.call(qsub_cmd_args)
         return None
 
-    def submit_CaVEMan_scripts(self, out, setup_base, split_base):
+    def submit_CaVEMan_scripts(self, out, qsub_base, setup_base, split_base):
         """
         :param out: Folder to store outputs of the program.
         :return: None
         """
         output_dir = os.path.join(out, self.out)
+        qsub_dir = os.path.join(output_dir, qsub_base)
         setup_script_file = os.path.join(output_dir, setup_base)
         split_script_file = os.path.join(output_dir, split_base)
         logging.info("Submit command: {0}".format(setup_script_file))
