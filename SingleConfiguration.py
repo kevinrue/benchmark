@@ -80,9 +80,10 @@ class SinglePairedConfiguration:
             if self.params[key] is None:
                 raise ValueError("MuTect2 does not support flags without value: {0}".format(key))
             cmd += " {0} {1}".format(key, self.params[key])
-            self.write_prolog_script(script_file, output_dir)
+        self.write_prolog_script(script_file)
         cmd += "\n"
         with open(script_file, 'a') as stream:
+            # stream.write("cd {0}\n".format(output_dir))
             stream.write(cmd)
             stream.write(
                 "awk '$0 ~ /^[^#]/ {{nFilters = split($7,filters,\";\"); for (i = 0; i < nFilters; ++i) {{print filters[i+1]}} }}' {0} | sort | uniq -c > {1}".format(
@@ -112,15 +113,16 @@ class SinglePairedConfiguration:
         cmd = "{0} --normal {1} --tumor {2} --ref {3} --config {4} --output-dir {5}\n".format(
             exe, file1, file2, ref, config_file, output_fulldir
         )
-        self.write_prolog_script(script_file, config_dir)
+        self.write_prolog_script(script_file)
         with open(script_file, 'a') as stream:
+            # stream.write("cd {0}\n".format(config_dir))
             stream.write("cp {0} {1}\n".format(template, config_file))
             for key in self.params.keys():
                 if self.params[key] is None:
                     raise ValueError("Strelka does not support flags without value: {0}".format(key))
                 stream.write("sed -i 's/^{0} = .*$/{0} = {1} # edited/' {2}\n".format(key, self.params[key], config_file))
             stream.write(cmd)
-            stream.write("cd {0}\n".format(output_basedir))
+            stream.write("cd {0}\n".format(output_fulldir))
             stream.write("make\n")
         self.make_script_executable(script_file)
         return None
@@ -145,9 +147,10 @@ class SinglePairedConfiguration:
             if self.params[key] is None:
                 raise ValueError("Virmid does not support flags without value: {0}".format(key))
             cmd += " {0} {1}".format(key, self.params[key])
-            self.write_prolog_script(script_file, output_dir)
         cmd += "\n"
+        self.write_prolog_script(script_file)
         with open(script_file, 'a') as stream:
+            # stream.write("cd {0}\n".format(output_dir))
             stream.write(cmd)
         self.make_script_executable(script_file)
         return None
@@ -172,8 +175,9 @@ class SinglePairedConfiguration:
         cmd = "sh {0} {1} {2} {3} {4} {5}\n".format(
             exe, file2, file1, output_dir, normal_list, config_script,
         )
-        self.write_prolog_script(script_file, config_dir)
+        self.write_prolog_script(script_file)
         with open(script_file, 'a') as stream:
+            # stream.write("cd {0}\n".format(output_dir))
             stream.write("cp {0} {1}\n".format(template, config_script))
             stream.write("sed -i 's|^PATH_TO_REF=.*$|PATH_TO_REF={0} # edited|' {1}\n".format(ref, config_script))
             stream.write("sed -i 's|^PATH_TO_SAMTOOLS=.*$|PATH_TO_SAMTOOLS={0} # edited|' {1}\n".format(
@@ -208,9 +212,10 @@ class SinglePairedConfiguration:
             if self.params[key] is None:
                 raise ValueError("VarScan does not support flags without value: {0}".format(key))
             cmd_VarScan += " {0} {1}".format(key, self.params[key])
-            self.write_prolog_script(script_file, output_dir)
+            self.write_prolog_script(script_file)
         cmd = "{0} | {1}\n".format(cmd_samtools, cmd_VarScan)
         with open(script_file, 'a') as stream:
+            # stream.write("cd {0}\n".format(output_dir))
             stream.write(cmd)
         self.make_script_executable(script_file)
         return None
@@ -238,6 +243,7 @@ class SinglePairedConfiguration:
         with open(ref_fai) as stream:
             fai_entries = len(stream.readlines())
             logging.info("# fai_entries: {0}".format(fai_entries))
+        self.write_prolog_script(setup_script_file)
         self.write_setup_script(setup_script_file, exe, ref, file1, file2, config_file)
         return None
 
@@ -292,7 +298,7 @@ class SinglePairedConfiguration:
         return None
 
     @staticmethod
-    def write_prolog_script(script, out):
+    def write_prolog_script(script):
         """
         Write common prolog of benchmark scripts.
         :param script: Filename of the script file to write.
@@ -301,7 +307,6 @@ class SinglePairedConfiguration:
         """
         with open(script, 'w') as stream:
             stream.write("#!/bin/bash\n")
-            stream.write("cd {0}\n".format(out))
         return None
 
     @staticmethod
