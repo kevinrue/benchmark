@@ -249,5 +249,5 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         """
         program_folder = os.path.join(out, self.out)
         for config in self.configurations:
-            config.submit_CaVEMan_scripts(program_folder, self.setup_script)
+            config.submit_CaVEMan_scripts(program_folder, self.setup_script, self.split_script)
         return None
