@@ -247,6 +247,7 @@ class SinglePairedConfiguration:
         :param file1:
         :param file2:
         :param config_file:
+        :param out:
         :return:
         """
         output_folder = os.path.join(out, 'results')
@@ -330,13 +331,13 @@ class SinglePairedConfiguration:
         subprocess.call(qsub_cmd_args)
         return None
 
-    def submit_CaVEMan_scripts(self, out, setup_script):
+    def submit_CaVEMan_scripts(self, out, setup_base):
         """
         :param out: Folder to store outputs of the program.
         :return: None
         """
         output_dir = os.path.join(out, self.out)
-        setup_script_file = os.path.join(output_dir, setup_script)
+        setup_script_file = os.path.join(output_dir, setup_base)
         logging.info("Submit command: {0}".format(setup_script_file))
         subprocess.call([setup_script_file])
         # pattern_job_id = re.compile('.* (\d+)[ .].*')
