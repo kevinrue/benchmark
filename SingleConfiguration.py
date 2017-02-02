@@ -240,6 +240,8 @@ class SinglePairedConfiguration:
         config_file = os.path.join(output_dir, 'caveman.cfg.ini')
         qsub_dir = os.path.join(output_dir, 'qsub')
         ref_fai = "{0}.fai".format(ref)
+        logging.info("Create qsub output folder: {0}".format(qsub_dir))
+        os.mkdir(qsub_dir)
         with open(ref_fai) as stream:
             fai_entries = len(stream.readlines())
             logging.info("# fai_entries: {0}".format(fai_entries))
