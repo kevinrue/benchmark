@@ -11,7 +11,6 @@ class PairedBenchmarkConfiguration:
     def __init__(self, file, out):
         """
         Initialise a BenchmarkConfiguration object.
-        :type file: str
         :param file: Input file that defines the programs and configurations to benchmark.
         :param out: Root folder to store all outputs of the benchmark.
         """
@@ -22,7 +21,7 @@ class PairedBenchmarkConfiguration:
 
     def parse_tsv(self):
         """
-        Parse a configuration file.
+        Parse a predefined configuration file.
         :return: None
         """
         logging.info("Parse configuration file: {0}".format(self.file))
@@ -59,8 +58,7 @@ class PairedBenchmarkConfiguration:
     @staticmethod
     def parse_params(params):
         """
-        Parse benchmark parameters. Expected format: '--flag1=value1;-flag2=value2;...'.
-        :type params: str
+        Parse benchmark parameters. Expected format: '--flag1=value1;-flag2=value2;flag3;flag4=value4'.
         :param params: Parameters to supply to the program.
         :return: None
         """
@@ -78,8 +76,8 @@ class PairedBenchmarkConfiguration:
     def select_program_config(params, program):
         """
         Create a ProgramConfiguration object adapted to a given program.
-        :param params: Dictionary of flag/value pairs.
-        :param program: Keyword of the program to benchmark.
+        :param params: Dictionary of flag/value pairs. Toggle flags are assigned None value.
+        :param program: Name of the program to benchmark.
         :return: An object that extends the ProgramConfiguration class.
         """
         if program == "MuTect2":
@@ -119,8 +117,7 @@ class PairedBenchmarkConfiguration:
 
     def make_program_dirs(self):
         """
-        Create a folder for each program tested;
-        delegate creation of folders for each configuration tested.
+        Create a folder for each program tested; delegate creation of folders for each configuration tested.
         Side-effect: update configurations to define the individual output folder for each configuration.
         :return: None
         """
