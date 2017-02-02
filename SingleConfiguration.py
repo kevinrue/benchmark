@@ -220,13 +220,15 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_CaVEMan_scripts(self, out, exe, ref, file1, file2, qsub_base, config_file_base, setup_base, split_base):
+    def write_CaVEMan_scripts(
+            self, out, exe, ref, file1, file2, qsub_base, config_file_base, setup_base, split_base, merge_splits_base):
         """
         Write a script to run the configuration using the VarScan program.
         """
         output_dir = os.path.join(out, self.out)
         setup_script_file = os.path.join(output_dir, setup_base)
         split_script_file = os.path.join(output_dir, split_base)
+        merge_splits_script_file = os.path.join(output_dir, merge_splits_base)
         qsub_dir = os.path.join(output_dir, qsub_base)
         config_file = os.path.join(output_dir, config_file_base)
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
@@ -235,6 +237,8 @@ class SinglePairedConfiguration:
         self.write_setup_script(setup_script_file, exe, ref, file1, file2, config_file, output_dir)
         self.write_prolog_script(split_script_file)
         self.write_CaVEMan_split_script(split_script_file, exe, config_file, qsub_dir)
+        self.write_prolog_script(merge_splits_script_file)
+        self.write_CaVEMan_merge_splits_script(merge_splits_script_file, qsub_dir, output_dir)
         return None
 
     def write_setup_script(self, script, exe, ref, file1, file2, config_file, out):
@@ -246,7 +250,7 @@ class SinglePairedConfiguration:
         :param file1:
         :param file2:
         :param config_file:
-        :param out:
+        :param out: Folder for outputs of configuration.
         :return:
         """
         output_folder = os.path.join(out, 'results')
@@ -275,6 +279,14 @@ class SinglePairedConfiguration:
         return None
 
     def write_CaVEMan_split_script(self, script, exe, config_file, qsub_dir):
+        """
+
+        :param script:
+        :param exe:
+        :param config_file:
+        :param qsub_dir:
+        :return:
+        """
         stdout_file = os.path.join(qsub_dir, 'out.split.${SGE_TASK_ID}')
         stderr_file = os.path.join(qsub_dir, 'err.split.${SGE_TASK_ID}')
         cmd_split = "{0} split -i $SGE_TASK_ID -f {1}".format(exe, config_file)
@@ -287,6 +299,26 @@ class SinglePairedConfiguration:
         cmd_split += " 1>{0} 2>{1}\n".format(stdout_file, stderr_file)
         with open(script, 'a') as stream:
             stream.write(cmd_split)
+        self.make_script_executable(script)
+        return None
+
+    def write_CaVEMan_merge_splits_script(self, script, qsub_dir, out):
+        """
+
+        :param script:
+        :param qsub_dir:
+        :param out: Folder for outputs of configuration.
+        :return:
+        """
+        split_file = os.path.join(out, 'splitList')
+        tmp_split_files = "{0}.*".format(split_file)
+        stdout_file = os.path.join(qsub_dir, 'out.merge-split.${SGE_TASK_ID}')
+        stderr_file = os.path.join(qsub_dir, 'err.merge-split.${SGE_TASK_ID}')
+        with open(script, 'a') as stream:
+            stream.write("ls -1 {0} | xargs\n".format(tmp_split_files))
+            stream.write("cat {0} > {1}\n".format(tmp_split_files, split_file))
+            stream.write("rm {0}\n".format(tmp_split_files))
+        self.make_script_executable(script)
         return None
 
     @staticmethod
@@ -334,7 +366,7 @@ class SinglePairedConfiguration:
         subprocess.call(qsub_cmd_args)
         return None
 
-    def submit_CaVEMan_scripts(self, out, ref_fai, qsub_base, setup_base, split_base):
+    def submit_CaVEMan_scripts(self, out, ref_fai, qsub_base, setup_base, split_base, merge_splits_base):
         """
         :param out: Folder to store outputs of the program.
         :return: None
@@ -343,6 +375,7 @@ class SinglePairedConfiguration:
         qsub_dir = os.path.join(output_dir, qsub_base)
         setup_script_file = os.path.join(output_dir, setup_base)
         split_script_file = os.path.join(output_dir, split_base)
+        merge_splits_script_file = os.path.join(output_dir, merge_splits_base)
         logging.info("Submit command: {0}".format(setup_script_file))
         if ref_fai is None:
             raise ValueError("ref_fai not set! please contact maintainer.")
@@ -353,19 +386,33 @@ class SinglePairedConfiguration:
         subprocess.call([setup_script_file])
         pattern_job_id = re.compile('.* (\d+)[ .].*')
         # Split
-        setup_stdout, err = subprocess.Popen(
-            [
+        split_cmd_args = [
                 'qsub',
                 '-t', "1-{0}".format(fai_entries),
-                '-o', os.path.join(qsub_dir, '01_split.out'),
-                '-e', os.path.join(qsub_dir, '01_split.err'),
+                '-o', os.path.join(qsub_dir, '02_split.out'),
+                '-e', os.path.join(qsub_dir, '02_split.err'),
                 '-N', "setup_{0}".format(self.index),
                 '-q', 'short.qc',
                 split_script_file
-            ],
-            stdout=subprocess.PIPE).communicate()
+            ]
+        logging.info("Submit command: {0}".format(' '.join(split_cmd_args)))
+        setup_stdout, err = subprocess.Popen(split_cmd_args, stdout=subprocess.PIPE).communicate()
         setup_job_id = pattern_job_id.match(setup_stdout.decode("utf-8")).group(1)
         logging.info("split_{0} JOB_ID: {1}".format(self.index, setup_job_id))
+        # Merge splits
+        merge_splits_cmd_args = [
+                'qsub',
+                '-hold_jid_ad', setup_job_id, # hold until setup completed
+                '-o', os.path.join(qsub_dir, '03_merge-splits.out'),
+                '-e', os.path.join(qsub_dir, '03_merge-splits.err'),
+                '-N', "setup_{0}".format(self.index),
+                '-q', 'short.qc',
+                split_script_file
+            ]
+        logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
+        merge_splits_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
+        setup_job_id = pattern_job_id.match(merge_splits_stdout.decode("utf-8")).group(1)
+        logging.info("merge_splits_{0} JOB_ID: {1}".format(self.index, setup_job_id))
         return None
 
 # def parse_job_id():

@@ -201,7 +201,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         self.path2exe = os.path.join(CaVEMan_dir, 'bin', 'caveman')
         self.setup_script = '01_setup_script.sh'
         self.split_script = '02_split_script.sh'
-        self.merge_split_script = '03_merge_split_script.sh'
+        self.merge_splits_script = '03_merge_splits_script.sh'
         self.Mstep_script = '04_Mstep_script.sh'
         self.merge_script = '05_merge_script.sh'
         self.Estep_script = '06_Estep_script.sh'
@@ -240,7 +240,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
             program_folder = os.path.join(out, self.out)
             config.write_CaVEMan_scripts(
                 program_folder, self.path2exe, ref, file1, file2, self.qsub_dir, self.config_file,
-                self.setup_script, self.split_script
+                self.setup_script, self.split_script, self.merge_splits_script
             )
         return None
 
@@ -253,6 +253,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         program_folder = os.path.join(out, self.out)
         for config in self.configurations:
             config.submit_CaVEMan_scripts(
-                program_folder, self.ref_fai, self.qsub_dir, self.setup_script, self.split_script
+                program_folder, self.ref_fai, self.qsub_dir, self.setup_script, self.split_script,
+                self.merge_splits_script
             )
         return None
