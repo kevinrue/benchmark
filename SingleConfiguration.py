@@ -22,7 +22,7 @@ class SinglePairedConfiguration:
     def __init__(self, params, index):
         """
         Constructor for the SinglePairedConfiguration class.
-        :param params: Dictionary of flag:value pairs.
+        :param params: Dictionary of parameter flags and values (or None for toggle flags).
         :param index: Index of the configuration in the list of the program.
         """
         self.params = params
@@ -31,7 +31,7 @@ class SinglePairedConfiguration:
 
     def make_dir_structure(self, out):
         """
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store outputs of the program.
         :return: None
         """
         config_folder = os.path.join(out, self.out)
@@ -234,14 +234,14 @@ class SinglePairedConfiguration:
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
         os.mkdir(qsub_dir)
         self.write_prolog_script(setup_script_file)
-        self.write_setup_script(setup_script_file, exe, ref, file1, file2, config_file, output_dir)
+        self.write_CaVEMan_setup_script(setup_script_file, exe, ref, file1, file2, config_file, output_dir)
         self.write_prolog_script(split_script_file)
         self.write_CaVEMan_split_script(split_script_file, exe, config_file, qsub_dir)
         self.write_prolog_script(merge_splits_script_file)
         self.write_CaVEMan_merge_splits_script(merge_splits_script_file, qsub_dir, output_dir)
         return None
 
-    def write_setup_script(self, script, exe, ref, file1, file2, config_file, out):
+    def write_CaVEMan_setup_script(self, script, exe, ref, file1, file2, config_file, out):
         """
         Write a script to run the setup step of CaVEMan.
         :param script:

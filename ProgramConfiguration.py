@@ -11,7 +11,7 @@ class PairedProgramConfiguration:
         """
         Initialise a Configuration object.
         :param params: Parameters to supply to the program.
-        :param out: Program to use in this configuration.
+        :param out: Folder to store all outputs of the program (name of the program).
         """
         self.configurations = []
         self.out = out
@@ -20,7 +20,7 @@ class PairedProgramConfiguration:
     def add_configuration(self, params):
         """
         Add a configuration.
-        :param params: Dictionary of parameter flags and values.
+        :param params: Dictionary of parameter flags and values (or None for toggle flags).
         :return: None
         """
         config_index = len(self.configurations)+1
@@ -28,29 +28,28 @@ class PairedProgramConfiguration:
 
     def make_dir_structure(self, out):
         """
-        Create the folder to store outputs of all configurations for this program.
+        Create the folder to store all outputs of the program.
         :param out: Root folder to store outputs of the benchmark.
         :return: None
         """
-        self.make_output_dir(out)
         program_folder = os.path.join(out, self.out)
+        self.make_output_dir(program_folder)
         self.make_config_dirs(program_folder)
         return None
 
     def make_output_dir(self, out):
         """
-        :param out: Root folder to store outputs of the benchmark.
+        :param out: Folder to store all outputs of the program.
         :return:
         """
-        program_folder = os.path.join(out, self.out)
-        logging.info("Create program output folder: {0}".format(program_folder))
-        os.mkdir(program_folder)
+        logging.info("Create program output folder: {0}".format(out))
+        os.mkdir(out)
         return None
 
     def make_config_dirs(self, out):
         """
         Create a folder for each configuration under the folder for the corresponding program.
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store all outputs of the program.
         :return: None
         """
         for config in self.configurations:
@@ -71,7 +70,7 @@ class PairedProgramConfiguration:
 
 class MuTect2PairedConfiguration(PairedProgramConfiguration):
     """
-    Configuration for the Mutect2 program.
+    Configuration for the MuTect2 program.
     """
     def __init__(self, params, out):
         super().__init__(params, out)
@@ -80,7 +79,7 @@ class MuTect2PairedConfiguration(PairedProgramConfiguration):
     def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store all outputs of the benchmark.
         :param ref: Path to reference genome Fasta file.
         :param file1: Input file for reference group (e.g. normal).
         :param file2: Input file for target group (e.g. tumour).
@@ -107,7 +106,7 @@ class StrelkaPairedConfiguration(PairedProgramConfiguration):
     def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store all outputs of the benchmark.
         :param ref: Reference genome Fasta file.
         :param file1: Input file for reference group (e.g. normal).
         :param file2: Input file for target group (e.g. tumour).
@@ -130,7 +129,7 @@ class VirmidPairedConfiguration(PairedProgramConfiguration):
     def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store all outputs of the benchmark.
         :param ref: Reference genome Fasta file.
         :param file1: Input file for reference group (e.g. normal).
         :param file2: Input file for target group (e.g. tumour).
@@ -155,7 +154,7 @@ class EBCallPairedConfiguration(PairedProgramConfiguration):
     def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store all outputs of the benchmark.
         :param ref: Reference genome Fasta file.
         :param file1: Input file for reference group (e.g. normal).
         :param file2: Input file for target group (e.g. tumour).
@@ -180,7 +179,7 @@ class VarScanPairedConfiguration(PairedProgramConfiguration):
     def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store all outputs of the benchmark.
         :param ref: Reference genome Fasta file.
         :param file1: Input file for reference group (e.g. normal).
         :param file2: Input file for target group (e.g. tumour).
@@ -212,7 +211,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
     def add_configuration(self, params):
         """
         Add a configuration (CaVEMan requires a specific add configuration).
-        :param params: Dictionary of parameter flags and values.
+        :param params: Dictionary of parameter flags and values (or None for toggle flags).
         :return: None
         """
         config_index = len(self.configurations)+1
@@ -228,7 +227,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
     def write_scripts(self, out, ref, file1, file2):
         """
         Write a script for each configuration.
-        :param out: Root folder to store outputs of the program.
+        :param out: Folder to store all outputs of the benchmark.
         :param ref: Reference genome Fasta file.
         :param file1: Input file for reference group (e.g. normal).
         :param file2: Input file for target group (e.g. tumour).
@@ -246,7 +245,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
 
     def submit_scripts(self, out):
         """
-        Run all benchmark scripts (CaVEMan submits multiple scripts with dependencies).
+        Submit all benchmark scripts (CaVEMan submits multiple scripts with dependencies).
         :param out: Root folder to store outputs of the benchmark.
         :return: None
         """
