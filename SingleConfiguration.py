@@ -410,6 +410,7 @@ class SinglePairedConfiguration:
             ]
         logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
         merge_splits_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
+        logging.info(merge_splits_stdout.decode("utf-8").strip())
         setup_job_id = pattern_job_id.match(merge_splits_stdout.decode("utf-8")).group(1)
         logging.info("merge_splits_{0} JOB_ID: {1}".format(self.index, setup_job_id))
         return None
