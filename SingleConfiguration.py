@@ -360,6 +360,10 @@ class SinglePairedConfiguration:
                 setup_script_file
             ],
             stdout=subprocess.PIPE).communicate()
+        print("setup_stdout")
+        print(setup_stdout)
+        print("err")
+        print(err)
         setup_job_id = pattern_job_id.match(setup_stdout.decode("utf-8")).group(1)
         logging.info("setup_{0} JOB_ID: {1}".format(self.index, setup_job_id))
         return None
