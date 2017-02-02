@@ -227,5 +227,16 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         """
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
-            config.write_CaVEMan_script(program_folder, self.path2exe, ref, file1, file2)
+            config.write_CaVEMan_scripts(program_folder, self.path2exe, ref, file1, file2)
+        return None
+
+    def submit_scripts(self, out):
+        """
+        Run all benchmark scripts (CaVEMan submits multiple scripts with dependencies).
+        :param out: Root folder to store outputs of the benchmark.
+        :return: None
+        """
+        program_folder = os.path.join(out, self.out)
+        for config in self.configurations:
+            config.submit_CaVEMan_scripts(program_folder)
         return None

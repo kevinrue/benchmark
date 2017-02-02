@@ -1,7 +1,7 @@
 
 import logging
-import os
 import subprocess
+import re
 
 from LocalSettings import *
 
@@ -215,7 +215,7 @@ class SinglePairedConfiguration:
         self.make_script_executable(script_file)
         return None
 
-    def write_CaVEMan_script(self, out, exe, ref, file1, file2):
+    def write_CaVEMan_scripts(self, out, exe, ref, file1, file2):
         """
         Write a script to run the configuration using the VarScan program.
         :param out: Folder to store outputs of the program.
@@ -226,27 +226,22 @@ class SinglePairedConfiguration:
         :return: None
         """
         output_dir = os.path.join(out, self.out)
-        script_file = os.path.join(output_dir, self.script_filename)
+        setup_script_file = os.path.join(output_dir, '01_setup_script.sh')
+        split_script_file = os.path.join(output_dir, '02_split_script.sh')
+        merge_split_script_file = os.path.join(output_dir, '03_merge_split_script.sh')
+        Mstep_script_file = os.path.join(output_dir, '04_Mstep_script.sh')
+        merge_script_file = os.path.join(output_dir, '05_merge_script.sh')
+        Estep_script_file = os.path.join(output_dir, '06_Estep_script.sh')
         config_file = os.path.join(output_dir, 'caveman.cfg.ini')
-        split_script = os.path.join(output_dir, 'split_script.sh')
         qsub_dir = os.path.join(output_dir, 'qsub')
         ref_fai = "{0}.fai".format(ref)
         with open(ref_fai) as stream:
             fai_entries = len(stream.readlines())
-        logging.info("Create script file: {0}".format(script_file))
-        self.write_prolog_script(script_file, output_dir)
-        self.write_CaVEMan_setup_command(script_file, exe, ref, file1, file2, config_file)
-        logging.info("Create qsub output folder: {0}".format(qsub_dir))
-        os.mkdir(qsub_dir)
-        self.write_CaVEMan_split_script(split_script, exe, config_file, qsub_dir)
-        with open(script_file, 'a') as stream:
-            stream.write("{6} -t 1-{0} -o {1} -e {1} -q {2} -N {3} -pe shmem {4} {5}".format(
-                fai_entries, '/dev/null', 'short.qc', 'split_{0}'.format(self.index), str(self.n_cores), split_script,
-                qsub_exe)
-            )
+            logging.info("# fai_entries: {0}".format(fai_entries))
+        self.write_setup_script(setup_script_file, exe, ref, file1, file2, config_file)
         return None
 
-    def write_CaVEMan_setup_command(self, script, exe, ref, file1, file2, config_file):
+    def write_setup_script(self, script, exe, ref, file1, file2, config_file):
         """
 
         :param script:
@@ -341,3 +336,34 @@ class SinglePairedConfiguration:
         logging.info("Submit command: {0}".format(qsub_cmd_str))
         subprocess.call(qsub_cmd_args)
         return None
+
+    def submit_CaVEMan_scripts(self, out):
+        """
+        :param out: Folder to store outputs of the program.
+        :return: None
+        """
+        output_dir = os.path.join(out, self.out)
+        setup_script_file = os.path.join(output_dir, '01_setup_script.sh')
+        split_script_file = os.path.join(output_dir, '02_split_script.sh')
+        merge_split_script_file = os.path.join(output_dir, '03_merge_split_script.sh')
+        Mstep_script_file = os.path.join(output_dir, '04_Mstep_script.sh')
+        merge_script_file = os.path.join(output_dir, '05_merge_script.sh')
+        Estep_script_file = os.path.join(output_dir, '06_Estep_script.sh')
+        qsub_dir = os.path.join(output_dir, 'qsub')
+        pattern_job_id = re.compile('.* (\d+)\..*')
+        setup_stdout, err = subprocess.Popen(
+            [
+                'qsub', '-o', os.path.join(qsub_dir, 'setup.out'),
+                '-e', os.path.join(qsub_dir, 'setup.err'),
+                '-N', "setup_{0}".format(self.index),
+                '-q', 'short.qc',
+                setup_script_file
+            ],
+            stdout=subprocess.PIPE)
+        setup_job_id = pattern_job_id.match(setup_stdout.decode("utf-8")).group(1)
+        logging.info("setup_{0} JOB_ID: {1}".format(self.index, setup_job_id))
+        return None
+
+# def parse_job_id():
+#     cmd = 'sed \'s/.* \([0-9]\+\)\..*/\\1/\''
+#     return
