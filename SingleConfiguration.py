@@ -229,12 +229,8 @@ class SinglePairedConfiguration:
         split_script_file = os.path.join(output_dir, split_base)
         qsub_dir = os.path.join(output_dir, qsub_base)
         config_file = os.path.join(output_dir, config_file_base)
-        ref_fai = "{0}.fai".format(ref)
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
         os.mkdir(qsub_dir)
-        with open(ref_fai) as stream:
-            fai_entries = len(stream.readlines())
-            logging.info("# fai_entries: {0}".format(fai_entries))
         self.write_prolog_script(setup_script_file)
         self.write_setup_script(setup_script_file, exe, ref, file1, file2, config_file, output_dir)
         self.write_prolog_script(split_script_file)
@@ -334,7 +330,7 @@ class SinglePairedConfiguration:
         subprocess.call(qsub_cmd_args)
         return None
 
-    def submit_CaVEMan_scripts(self, out, qsub_base, setup_base, split_base):
+    def submit_CaVEMan_scripts(self, out, ref_fai, qsub_base, setup_base, split_base):
         """
         :param out: Folder to store outputs of the program.
         :return: None
@@ -344,13 +340,20 @@ class SinglePairedConfiguration:
         setup_script_file = os.path.join(output_dir, setup_base)
         split_script_file = os.path.join(output_dir, split_base)
         logging.info("Submit command: {0}".format(setup_script_file))
+        if ref_fai is None:
+            raise ValueError("ref_fai not set! please contact maintainer.")
+        with open(ref_fai) as stream:
+            fai_entries = len(stream.readlines())
+            logging.info("# fai_entries: {0}".format(fai_entries))
         # Setup
         subprocess.call([setup_script_file])
         pattern_job_id = re.compile('.* (\d+)[ .].*')
         # Split
         setup_stdout, err = subprocess.Popen(
             [
-                'qsub', '-o', os.path.join(qsub_dir, 'setup.out'),
+                'qsub',
+                '-t', "1-{0}".format(fai_entries),
+                '-o', os.path.join(qsub_dir, 'setup.out'),
                 '-e', os.path.join(qsub_dir, 'setup.err'),
                 '-N', "setup_{0}".format(self.index),
                 '-q', 'short.qc',

@@ -207,6 +207,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         self.Estep_script = '06_Estep_script.sh'
         self.config_file = 'caveman.cfg.ini'
         self.qsub_dir = 'qsub'
+        self.ref_fai = None # Set when self.write_scripts() is called
 
     def add_configuration(self, params):
         """
@@ -233,6 +234,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         :param file2: Input file for target group (e.g. tumour).
         :return: None
         """
+        self.ref_fai = "{0}.fai".format(ref)
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
             config.write_CaVEMan_scripts(
