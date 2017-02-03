@@ -370,8 +370,9 @@ class SinglePairedConfiguration:
             stream.write(cat_stdout)
         # Remove splits
         merge_splits_cmd_args = [
-            'rm', glob.glob(tmp_split_files)
+            'rm'
         ]
+        merge_splits_cmd_args += glob.glob(tmp_split_files)
         logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
         subprocess.call(merge_splits_cmd_args)
         # Mstep
