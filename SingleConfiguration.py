@@ -233,10 +233,10 @@ class SinglePairedConfiguration:
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
         os.mkdir(qsub_dir)
         self.write_prolog_script(Mstep_script_file)
-        self.write_CaVEMan_Mstep_script(Mstep_script_file, exe, config_file)
+        self.write_CaVEMan_Mstep_script(Mstep_script_file, exe, config_file, qsub_dir)
         return None
 
-    def write_CaVEMan_Mstep_script(self, script, exe, config_file):
+    def write_CaVEMan_Mstep_script(self, script, exe, config_file, qsub_dir):
         """
 
         :param script:
@@ -244,6 +244,8 @@ class SinglePairedConfiguration:
         :param config_file:
         :return:
         """
+        stdout_file = os.path.join(qsub_dir, 'out.Mstep.${SGE_TASK_ID}')
+        stderr_file = os.path.join(qsub_dir, 'err.Mstep.${SGE_TASK_ID}')
         cmd_Mstep = "{0} mstep -f {1} -i $SGE_TASK_ID".format(exe, config_file)
         for key in self.params.keys():
             if key.startswith('mstep:'):
@@ -251,8 +253,9 @@ class SinglePairedConfiguration:
                 if self.params[key] is None:
                     raise ValueError("CaVEMan Mstep step does not support flags without value: {0}".format(key))
                 cmd_Mstep += " {0}".format(self.params[key])
-        cmd_Mstep += "\n"
+        cmd_Mstep += " 1>{0} 2>{1}\n".format(stdout_file, stderr_file)
         with open(script, 'a') as stream:
+            stream.write('cd $SGE_O_WORKDIR\n')
             stream.write(cmd_Mstep)
         self.make_script_executable(script)
         return None
@@ -303,7 +306,7 @@ class SinglePairedConfiguration:
         return None
 
     def submit_CaVEMan_scripts(
-            self, out, exe, ref_fai, file1, file2, config_file, qsub_base, mstep_base
+            self, out, exe, ref_fai, file1, file2, config_base, qsub_base, mstep_base
     ):
         """
 
@@ -311,6 +314,7 @@ class SinglePairedConfiguration:
         :return: None
         """
         config_dir = os.path.join(out, self.out)
+        config_file = os.path.join(config_dir, config_base)
         qsub_dir = os.path.join(config_dir, qsub_base)
         result_folder = os.path.join(config_dir, 'results')
         split_file = os.path.join(config_dir, 'splitList')
