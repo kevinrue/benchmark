@@ -2,6 +2,7 @@
 import logging
 import subprocess
 import re
+import glob
 
 from LocalSettings import *
 
@@ -364,10 +365,12 @@ class SinglePairedConfiguration:
             'cat', tmp_split_files, '>', split_file,
         ]
         logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
-        subprocess.call(merge_splits_cmd_args)
+        cat_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
+        with open(split_file, 'w') as stream:
+            stream.write(cat_stdout)
         # Remove splits
         merge_splits_cmd_args = [
-            'rm', tmp_split_files
+            'rm', glob.glob(tmp_split_files)
         ]
         logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
         subprocess.call(merge_splits_cmd_args)
