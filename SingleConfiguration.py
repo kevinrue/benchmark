@@ -222,13 +222,14 @@ class SinglePairedConfiguration:
         return None
 
     def write_CaVEMan_scripts(
-            self, out, exe, qsub_base, config_file_base, mstep_base, merge_base, cov_base, prob_base):
+            self, out, exe, qsub_base, config_file_base, mstep_base, merge_base, cov_base, prob_base, estep_base):
         """
         Write a script to run the configuration using the VarScan program.
         """
         output_dir = os.path.join(out, self.out)
         mstep_script_file = os.path.join(output_dir, mstep_base)
         merge_script_file = os.path.join(output_dir, merge_base)
+        estep_script_file = os.path.join(output_dir, estep_base)
         qsub_dir = os.path.join(output_dir, qsub_base)
         config_file = os.path.join(output_dir, config_file_base)
         cov_file = os.path.join(output_dir, cov_base)
@@ -236,12 +237,14 @@ class SinglePairedConfiguration:
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
         os.mkdir(qsub_dir)
         self.write_prolog_script(mstep_script_file)
-        self.write_CaVEMan_Mstep_script(mstep_script_file, exe, config_file, qsub_dir)
+        self.write_CaVEMan_mstep_script(mstep_script_file, exe, config_file, qsub_dir)
         self.write_prolog_script(merge_script_file)
-        self.write_CaVEMan_Merge_script(merge_script_file, exe, config_file, cov_file, prob_file)
+        self.write_CaVEMan_merge_script(merge_script_file, exe, config_file, cov_file, prob_file)
+        self.write_prolog_script(estep_script_file)
+        self.write_CaVEMan_estep_script(estep_script_file, exe, config_file, qsub_dir, cov_file, prob_file)
         return None
 
-    def write_CaVEMan_Mstep_script(self, script, exe, config_file, qsub_dir):
+    def write_CaVEMan_mstep_script(self, script, exe, config_file, qsub_dir):
         """
 
         :param script:
@@ -265,7 +268,7 @@ class SinglePairedConfiguration:
         self.make_script_executable(script)
         return None
 
-    def write_CaVEMan_Merge_script(self, script, exe, config_file, cov_file, prob_file):
+    def write_CaVEMan_merge_script(self, script, exe, config_file, cov_file, prob_file):
         """
 
         :param script:
@@ -277,6 +280,30 @@ class SinglePairedConfiguration:
         with open(script, 'a') as stream:
             stream.write('cd $SGE_O_WORKDIR\n')
             stream.write(cmd_merge)
+        self.make_script_executable(script)
+        return None
+
+    def write_CaVEMan_estep_script(self, script, exe, config_file, qsub_dir, cov_file, prob_file):
+        """
+
+        :param script:
+        :param exe:
+        :param config_file:
+        :return:
+        """
+        stdout_file = os.path.join(qsub_dir, 'out.estep.${SGE_TASK_ID}')
+        stderr_file = os.path.join(qsub_dir, 'err.estep.${SGE_TASK_ID}')
+        cmd_Mstep = "{0} estep -i $SGE_TASK_ID -f {1} -g {2} -o {3}".format(exe, config_file, cov_file, prob_file)
+        for key in self.params.keys():
+            if key.startswith('estep:'):
+                cmd_Mstep += " {0}".format(key.replace('estep:', ''))
+                if self.params[key] is None:
+                    raise ValueError("CaVEMan Estep step does not support flags without value: {0}".format(key))
+                cmd_Mstep += " {0}".format(self.params[key])
+        cmd_Mstep += " 1>{0} 2>{1}\n".format(stdout_file, stderr_file)
+        with open(script, 'a') as stream:
+            stream.write('cd $SGE_O_WORKDIR\n')
+            stream.write(cmd_Mstep)
         self.make_script_executable(script)
         return None
 
@@ -326,7 +353,7 @@ class SinglePairedConfiguration:
         return None
 
     def submit_CaVEMan_scripts(
-            self, out, exe, ref_fai, file1, file2, config_base, qsub_base, mstep_base, merge_base
+            self, out, exe, ref_fai, file1, file2, config_base, qsub_base, mstep_base, merge_base, estep_base
     ):
         """
 
@@ -341,6 +368,7 @@ class SinglePairedConfiguration:
         alg_bean_file = os.path.join(config_dir, 'alg_bean')
         mstep_script_file = os.path.join(config_dir, mstep_base)
         merge_script_file = os.path.join(config_dir, merge_base)
+        estep_script_file = os.path.join(config_dir, estep_base)
         pattern_job_id = re.compile('.* (\d+)[ .].*')
         # Setup
         cmd_setup = [
@@ -428,4 +456,20 @@ class SinglePairedConfiguration:
         logging.info(merge_stdout.decode("utf-8").strip())
         merge_job_id = pattern_job_id.match(merge_stdout.decode("utf-8")).group(1)
         logging.info("Mstep_{0} JOB_ID: {1}".format(self.index, merge_job_id))
+        # Mstep
+        estep_cmd_args = [
+            'qsub',
+            '-t', "1-{0}".format(split_entries),
+            '-hold_jid_ad', merge_job_id,  # hold until Merge completed
+            '-o', os.path.join(qsub_dir, '01_estep.out'),
+            '-e', os.path.join(qsub_dir, '01_estep.err'),
+            '-N', "Estep_{0}".format(self.index),
+            '-q', 'short.qc',
+            estep_script_file
+        ]
+        logging.info("Submit command: {0}".format(' '.join(estep_cmd_args)))
+        estep_stdout, err = subprocess.Popen(mstep_cmd_args, stdout=subprocess.PIPE).communicate()
+        logging.info(estep_stdout.decode("utf-8").strip())
+        estep_job_id = pattern_job_id.match(estep_stdout.decode("utf-8")).group(1)
+        logging.info("Estep_{0} JOB_ID: {1}".format(self.index, estep_job_id))
         return None
