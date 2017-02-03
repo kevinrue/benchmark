@@ -4,3 +4,4 @@ Virmid	-c=20;-C=10000
 EBCall	MAX_NORMAL_ALLELE_FREQ=0.1;MIN_MINUS_LOG10_PV=3
 VarScan	--tumor-purity=0.01;--strand-filter=1
 CaVEMan	setup:-g=./ignore_file.tsv;setup:-w
+CaVEMan	setup:-g=/dev/null;mstep:-m=11;estep:--min-norm-coverage=30;estep:--min-tum-coverage=30
