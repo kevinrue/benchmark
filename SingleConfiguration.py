@@ -468,7 +468,7 @@ class SinglePairedConfiguration:
             estep_script_file
         ]
         logging.info("Submit command: {0}".format(' '.join(estep_cmd_args)))
-        estep_stdout, err = subprocess.Popen(mstep_cmd_args, stdout=subprocess.PIPE).communicate()
+        estep_stdout, err = subprocess.Popen(estep_cmd_args, stdout=subprocess.PIPE).communicate()
         logging.info(estep_stdout.decode("utf-8").strip())
         estep_job_id = pattern_job_id.match(estep_stdout.decode("utf-8")).group(1)
         logging.info("Estep_{0} JOB_ID: {1}".format(self.index, estep_job_id))
