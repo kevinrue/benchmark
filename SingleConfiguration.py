@@ -2,7 +2,6 @@
 import logging
 import subprocess
 import re
-import glob
 
 from LocalSettings import *
 
