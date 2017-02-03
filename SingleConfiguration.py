@@ -360,7 +360,7 @@ class SinglePairedConfiguration:
             logging.info("Submitting command: {0}".format(' '.join(cmd_split)))
             subprocess.call(cmd_split)
         # Merge splits
-        tmp_split_files = "{0}.*".format(split_file)
+        tmp_split_files = glob.glob("{0}.*".format(split_file))
         cat_splits_cmd_args = ['cat', tmp_split_files]
         logging.info("Submit command: {0}".format(' '.join(cat_splits_cmd_args + ['>', split_file])))
         cat_stdout, err = subprocess.Popen(cat_splits_cmd_args, stdout=subprocess.PIPE).communicate()
@@ -387,7 +387,7 @@ class SinglePairedConfiguration:
             mstep_script_file
         ]
         logging.info("Submit command: {0}".format(' '.join(mstep_cmd_args)))
-        mstep_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
+        mstep_stdout, err = subprocess.Popen(mstep_cmd_args, stdout=subprocess.PIPE).communicate()
         logging.info(mstep_stdout.decode("utf-8").strip())
         mstep_job_id = pattern_job_id.match(mstep_stdout.decode("utf-8")).group(1)
         logging.info("merge_splits_{0} JOB_ID: {1}".format(self.index, mstep_job_id))
