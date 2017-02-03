@@ -384,7 +384,9 @@ class SinglePairedConfiguration:
         # Fail-safe: 'setup:-g' should have been added automatically if not specified in the config file
         # See BenchmarkConfiguration.select_program_config(...)
         if 'setup:-g' not in self.params.keys():
-            raise ValueError('"setup:-g" not found in parameters. Please contact maintainer.')
+            raise ValueError(
+                '"setup:-g" not found in parameters. Please contact maintainer (or add it in config file).'
+            )
         for key in self.params.keys():
             if key.startswith('setup:'):
                 cmd_setup.append(key.replace('setup:', ''))
@@ -395,34 +397,12 @@ class SinglePairedConfiguration:
         # Split
         if ref_fai is None:
             raise ValueError("ref_fai not set! please contact maintainer.")
-        with open(ref_fai) as stream:
-            fai_entries = len(stream.readlines())
-            logging.info("# fai_entries: {0}".format(fai_entries))
-        for fai_index in range(1, fai_entries+1):
-            cmd_split = [
-                exe, 'split',
-                '-i', str(fai_index),
-                '-f', config_file
-            ]
-            for key in self.params.keys():
-                if key.startswith('split:'):
-                    cmd_split.append(key.replace('split:', ''))
-                    if self.params[key] is None:
-                        raise ValueError("CaVEMan split step does not support flags without value: {0}".format(key))
-                    cmd_split.append(self.params[key])
-            logging.info("Submitting command: {0}".format(' '.join(cmd_split)))
-            subprocess.call(cmd_split)
-        # Merge splits
-        tmp_split_files = glob.glob("{0}.*".format(split_file))
-        cat_splits_cmd_args = ['cat'] + tmp_split_files
-        logging.info("Submit command: {0}".format(' '.join(cat_splits_cmd_args + ['>', split_file])))
-        cat_stdout, err = subprocess.Popen(cat_splits_cmd_args, stdout=subprocess.PIPE).communicate()
-        with open(split_file, 'wb') as stream:
-            stream.write(cat_stdout)
-        # Remove splits
-        rm_splits_cmd_args = ['rm'] + tmp_split_files
-        logging.info("Submit command: {0}".format(' '.join(rm_splits_cmd_args)))
-        subprocess.call(rm_splits_cmd_args)
+        logging.info("Parse FAI index: {0}".format(ref_fai))
+        logging.info("Make split list: {0}".format(split_file))
+        with open(ref_fai) as stream_in, open(split_file, 'w') as stream_out:
+            for fai_entry in stream_in:
+                fai_fields = fai_entry.strip().split('\t')
+                stream_out("{0}\t0\t{1}\n".format(fai_fields[0], fai_fields[1]))
         # Mstep
         with open(split_file) as stream:
             split_entries = len(stream.readlines())
