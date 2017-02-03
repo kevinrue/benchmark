@@ -366,7 +366,7 @@ class SinglePairedConfiguration:
         ]
         logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
         cat_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
-        with open(split_file, 'w') as stream:
+        with open(split_file, 'wb') as stream:
             stream.write(cat_stdout)
         # Remove splits
         merge_splits_cmd_args = [

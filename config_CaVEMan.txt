@@ -1,1 +1,1 @@
-CaVEMan	setup:-g=/dev/null;split;split:-m=1000;mstep:-m=20
+CaVEMan	setup:-g=/dev/null;split:-m=1000;mstep:-m=11
