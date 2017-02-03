@@ -222,18 +222,23 @@ class SinglePairedConfiguration:
         return None
 
     def write_CaVEMan_scripts(
-            self, out, exe, qsub_base, config_file_base, Mstep_base):
+            self, out, exe, qsub_base, config_file_base, mstep_base, merge_base, cov_base, prob_base):
         """
         Write a script to run the configuration using the VarScan program.
         """
         output_dir = os.path.join(out, self.out)
-        Mstep_script_file = os.path.join(output_dir, Mstep_base)
+        mstep_script_file = os.path.join(output_dir, mstep_base)
+        merge_script_file = os.path.join(output_dir, merge_base)
         qsub_dir = os.path.join(output_dir, qsub_base)
         config_file = os.path.join(output_dir, config_file_base)
+        cov_file = os.path.join(output_dir, cov_base)
+        prob_file = os.path.join(output_dir, prob_base)
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
         os.mkdir(qsub_dir)
-        self.write_prolog_script(Mstep_script_file)
-        self.write_CaVEMan_Mstep_script(Mstep_script_file, exe, config_file, qsub_dir)
+        self.write_prolog_script(mstep_script_file)
+        self.write_CaVEMan_Mstep_script(mstep_script_file, exe, config_file, qsub_dir)
+        self.write_prolog_script(merge_script_file)
+        self.write_CaVEMan_Merge_script(merge_script_file, exe, config_file, cov_file, prob_file)
         return None
 
     def write_CaVEMan_Mstep_script(self, script, exe, config_file, qsub_dir):
@@ -244,8 +249,8 @@ class SinglePairedConfiguration:
         :param config_file:
         :return:
         """
-        stdout_file = os.path.join(qsub_dir, 'out.Mstep.${SGE_TASK_ID}')
-        stderr_file = os.path.join(qsub_dir, 'err.Mstep.${SGE_TASK_ID}')
+        stdout_file = os.path.join(qsub_dir, 'out.mstep.${SGE_TASK_ID}')
+        stderr_file = os.path.join(qsub_dir, 'err.mstep.${SGE_TASK_ID}')
         cmd_Mstep = "{0} mstep -f {1} -i $SGE_TASK_ID".format(exe, config_file)
         for key in self.params.keys():
             if key.startswith('mstep:'):
@@ -257,6 +262,21 @@ class SinglePairedConfiguration:
         with open(script, 'a') as stream:
             stream.write('cd $SGE_O_WORKDIR\n')
             stream.write(cmd_Mstep)
+        self.make_script_executable(script)
+        return None
+
+    def write_CaVEMan_Merge_script(self, script, exe, config_file, cov_file, prob_file):
+        """
+
+        :param script:
+        :param exe:
+        :param config_file:
+        :return:
+        """
+        cmd_merge = "{0} merge -f {1} -c {2} -p {3}\n".format(exe, config_file, cov_file, prob_file)
+        with open(script, 'a') as stream:
+            stream.write('cd $SGE_O_WORKDIR\n')
+            stream.write(cmd_merge)
         self.make_script_executable(script)
         return None
 
@@ -306,7 +326,7 @@ class SinglePairedConfiguration:
         return None
 
     def submit_CaVEMan_scripts(
-            self, out, exe, ref_fai, file1, file2, config_base, qsub_base, mstep_base
+            self, out, exe, ref_fai, file1, file2, config_base, qsub_base, mstep_base, merge_base
     ):
         """
 
@@ -320,6 +340,7 @@ class SinglePairedConfiguration:
         split_file = os.path.join(config_dir, 'splitList')
         alg_bean_file = os.path.join(config_dir, 'alg_bean')
         mstep_script_file = os.path.join(config_dir, mstep_base)
+        merge_script_file = os.path.join(config_dir, merge_base)
         pattern_job_id = re.compile('.* (\d+)[ .].*')
         # Setup
         cmd_setup = [
@@ -381,8 +402,8 @@ class SinglePairedConfiguration:
         mstep_cmd_args = [
             'qsub',
             '-t', "1-{0}".format(split_entries),
-            '-o', os.path.join(qsub_dir, '01_Mstep.out'),
-            '-e', os.path.join(qsub_dir, '01_Mstep.err'),
+            '-o', os.path.join(qsub_dir, '01_mstep.out'),
+            '-e', os.path.join(qsub_dir, '01_mstep.err'),
             '-N', "Mstep_{0}".format(self.index),
             '-q', 'short.qc',
             mstep_script_file
@@ -391,5 +412,20 @@ class SinglePairedConfiguration:
         mstep_stdout, err = subprocess.Popen(mstep_cmd_args, stdout=subprocess.PIPE).communicate()
         logging.info(mstep_stdout.decode("utf-8").strip())
         mstep_job_id = pattern_job_id.match(mstep_stdout.decode("utf-8")).group(1)
-        logging.info("merge_splits_{0} JOB_ID: {1}".format(self.index, mstep_job_id))
+        logging.info("Mstep_{0} JOB_ID: {1}".format(self.index, mstep_job_id))
+        # Merge
+        merge_cmd_args = [
+            'qsub',
+            '-hold_jid', mstep_job_id,  # hold until Mstep completed
+            '-o', os.path.join(qsub_dir, '02_merge.out'),
+            '-e', os.path.join(qsub_dir, '03_merge.err'),
+            '-N', "merge_{0}".format(self.index),
+            '-q', 'short.qc',
+            merge_script_file
+        ]
+        logging.info("Submit command: {0}".format(' '.join(merge_cmd_args)))
+        merge_stdout, err = subprocess.Popen(merge_cmd_args, stdout=subprocess.PIPE).communicate()
+        logging.info(merge_stdout.decode("utf-8").strip())
+        merge_job_id = pattern_job_id.match(merge_stdout.decode("utf-8")).group(1)
+        logging.info("Mstep_{0} JOB_ID: {1}".format(self.index, merge_job_id))
         return None
