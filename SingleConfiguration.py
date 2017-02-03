@@ -367,10 +367,7 @@ class SinglePairedConfiguration:
         with open(split_file, 'wb') as stream:
             stream.write(cat_stdout)
         # Remove splits
-        rm_splits_cmd_args = [
-            'rm'
-        ]
-        rm_splits_cmd_args += glob.glob(tmp_split_files)
+        rm_splits_cmd_args = ['rm'] + tmp_split_files
         logging.info("Submit command: {0}".format(' '.join(rm_splits_cmd_args)))
         subprocess.call(rm_splits_cmd_args)
         # Mstep
