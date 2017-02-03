@@ -204,10 +204,13 @@ class SinglePairedConfiguration:
         """
         output_dir = os.path.join(out, self.out)
         script_file = os.path.join(output_dir, self.script_filename)
-        output_basename = os.path.join(output_dir, 'output')
+        output_snp = os.path.join(output_dir, 'output.snp')
+        output_indel = os.path.join(output_dir, 'output.indel')
         logging.info("Create script file: {0}".format(script_file))
         cmd_samtools = "{0} mpileup -f {1} {2} {3}".format(samtools_exe, ref, file1, file2)
-        cmd_VarScan = "{0} -Xmx25g -jar {1} somatic {2} --mpileup 1".format(java_exe, exe, output_basename)
+        cmd_VarScan = "{0} -Xmx25g -jar {1} somatic --output-snp {2} --output-indel {3} --mpileup 1".format(
+            java_exe, exe, output_snp, output_indel
+        )
         for key in self.params.keys():
             if self.params[key] is None:
                 raise ValueError("VarScan does not support flags without value: {0}".format(key))
