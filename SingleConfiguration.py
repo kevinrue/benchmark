@@ -302,7 +302,8 @@ class SinglePairedConfiguration:
         return None
 
     def submit_CaVEMan_scripts(
-            self, out, exe, ref_fai, file1, file2, config_file, qsub_base, mstep_base):
+            self, out, exe, ref_fai, file1, file2, config_file, qsub_base, mstep_base
+    ):
         """
 
         :param out: Folder to store outputs of the program.

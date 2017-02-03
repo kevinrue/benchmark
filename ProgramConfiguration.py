@@ -204,6 +204,8 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         self.config_file = 'caveman.cfg.ini'
         self.qsub_dir = 'qsub'
         self.ref_fai = None # Set when self.write_scripts() is called
+        self.file1 = None # Set when self.write_scripts() is called
+        self.file2 = None # Set when self.write_scripts() is called
 
     def add_configuration(self, params):
         """
@@ -231,7 +233,8 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         :return: None
         """
         self.ref_fai = "{0}.fai".format(ref)
-
+        self.file1 = file1
+        self.file2 = file2
         logging.info("Fasta index file: {0}".format(self.ref_fai))
         for config in self.configurations:
             program_folder = os.path.join(out, self.out)
@@ -250,7 +253,7 @@ class CaVEManPairedConfiguration(PairedProgramConfiguration):
         program_folder = os.path.join(out, self.out)
         for config in self.configurations:
             config.submit_CaVEMan_scripts(
-                program_folder, self.path2exe, self.ref_fai, self.config_file, self.ref_fai, self.qsub_dir,
-                self.Mstep_script
+                program_folder, self.path2exe, self.ref_fai, self.file1, self.file2,
+                self.config_file, self.qsub_dir, self.Mstep_script
             )
         return None
