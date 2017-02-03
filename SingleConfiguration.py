@@ -446,7 +446,7 @@ class SinglePairedConfiguration:
             'qsub',
             '-hold_jid', mstep_job_id,  # hold until Mstep completed
             '-o', os.path.join(qsub_dir, '02_merge.out'),
-            '-e', os.path.join(qsub_dir, '03_merge.err'),
+            '-e', os.path.join(qsub_dir, '02_merge.err'),
             '-N', "merge_{0}".format(self.index),
             '-q', 'short.qc',
             merge_script_file
@@ -461,8 +461,8 @@ class SinglePairedConfiguration:
             'qsub',
             '-t', "1-{0}".format(split_entries),
             '-hold_jid', merge_job_id,  # hold until Merge completed
-            '-o', os.path.join(qsub_dir, '01_estep.out'),
-            '-e', os.path.join(qsub_dir, '01_estep.err'),
+            '-o', os.path.join(qsub_dir, '03_estep.out'),
+            '-e', os.path.join(qsub_dir, '03_estep.err'),
             '-N', "Estep_{0}".format(self.index),
             '-q', 'short.qc',
             estep_script_file
