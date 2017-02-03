@@ -221,7 +221,8 @@ class SinglePairedConfiguration:
         return None
 
     def write_CaVEMan_scripts(
-            self, out, exe, ref, file1, file2, qsub_base, config_file_base, setup_base, split_base, merge_splits_base):
+            self, out, exe, ref, file1, file2, qsub_base, config_file_base,
+            setup_base, split_base, merge_splits_base, Mstep_base):
         """
         Write a script to run the configuration using the VarScan program.
         """
@@ -229,6 +230,7 @@ class SinglePairedConfiguration:
         setup_script_file = os.path.join(output_dir, setup_base)
         split_script_file = os.path.join(output_dir, split_base)
         merge_splits_script_file = os.path.join(output_dir, merge_splits_base)
+        Mstep_script_file = os.path.join(output_dir, Mstep_base)
         qsub_dir = os.path.join(output_dir, qsub_base)
         config_file = os.path.join(output_dir, config_file_base)
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
@@ -238,7 +240,9 @@ class SinglePairedConfiguration:
         self.write_prolog_script(split_script_file)
         self.write_CaVEMan_split_script(split_script_file, exe, config_file, qsub_dir)
         self.write_prolog_script(merge_splits_script_file)
-        self.write_CaVEMan_merge_splits_script(merge_splits_script_file, qsub_dir, output_dir)
+        self.write_CaVEMan_merge_splits_script(merge_splits_script_file, output_dir)
+        self.write_prolog_script(Mstep_script_file)
+        self.write_CaVEMan_Mstep_script(Mstep_script_file, exe, config_file)
         return None
 
     def write_CaVEMan_setup_script(self, script, exe, ref, file1, file2, config_file, out):
@@ -302,11 +306,10 @@ class SinglePairedConfiguration:
         self.make_script_executable(script)
         return None
 
-    def write_CaVEMan_merge_splits_script(self, script, qsub_dir, out):
+    def write_CaVEMan_merge_splits_script(self, script, out):
         """
 
         :param script:
-        :param qsub_dir:
         :param out: Folder for outputs of configuration.
         :return:
         """
@@ -316,6 +319,27 @@ class SinglePairedConfiguration:
             stream.write("ls -1 {0} | xargs\n".format(tmp_split_files))
             stream.write("cat {0} > {1}\n".format(tmp_split_files, split_file))
             stream.write("rm {0}\n".format(tmp_split_files))
+        self.make_script_executable(script)
+        return None
+
+    def write_CaVEMan_Mstep_script(self, script, exe, config_file):
+        """
+
+        :param script:
+        :param exe:
+        :param config_file:
+        :return:
+        """
+        cmd_Mstep = "{0} mstep -f {1} -i $SGE_TASK_ID".format(exe, config_file)
+        for key in self.params.keys():
+            if key.startswith('mstep:'):
+                cmd_Mstep += " {0}".format(key.replace('mstep:', ''))
+                if self.params[key] is None:
+                    raise ValueError("CaVEMan Mstep step does not support flags without value: {0}".format(key))
+                cmd_Mstep += " {0}".format(self.params[key])
+        cmd_Mstep += "\n"
+        with open(script, 'a') as stream:
+            stream.write(cmd_Mstep)
         self.make_script_executable(script)
         return None
 
