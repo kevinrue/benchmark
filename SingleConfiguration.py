@@ -361,7 +361,7 @@ class SinglePairedConfiguration:
             subprocess.call(cmd_split)
         # Merge splits
         tmp_split_files = glob.glob("{0}.*".format(split_file))
-        cat_splits_cmd_args = ['cat', tmp_split_files]
+        cat_splits_cmd_args = ['cat'] + tmp_split_files
         logging.info("Submit command: {0}".format(' '.join(cat_splits_cmd_args + ['>', split_file])))
         cat_stdout, err = subprocess.Popen(cat_splits_cmd_args, stdout=subprocess.PIPE).communicate()
         with open(split_file, 'wb') as stream:
