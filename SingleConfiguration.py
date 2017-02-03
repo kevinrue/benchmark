@@ -402,7 +402,7 @@ class SinglePairedConfiguration:
         with open(ref_fai) as stream_in, open(split_file, 'w') as stream_out:
             for fai_entry in stream_in:
                 fai_fields = fai_entry.strip().split('\t')
-                stream_out("{0}\t0\t{1}\n".format(fai_fields[0], fai_fields[1]))
+                stream_out.write("{0}\t0\t{1}\n".format(fai_fields[0], fai_fields[1]))
         # Mstep
         with open(split_file) as stream:
             split_entries = len(stream.readlines())
