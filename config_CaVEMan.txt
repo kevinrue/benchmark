@@ -1,1 +1,1 @@
-CaVEMan	setup:-g=/dev/null;mstep:-m=11
+CaVEMan	setup:-g=/dev/null;mstep:-m=11;estep:--min-norm-coverage=30;estep:--min-tum-coverage=30
