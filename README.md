@@ -70,7 +70,6 @@ configuration file is as follows:
         relevant for benchmarking. Any `merge:flag[=value]` parameter
         in the configuration file will be ignored.
 
-
 # Post-processing
 
 Currently, only the VCF file produced by `MuTect2` is further processed
