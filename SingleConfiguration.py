@@ -361,18 +361,18 @@ class SinglePairedConfiguration:
             subprocess.call(cmd_split)
         # Merge splits
         tmp_split_files = "{0}.*".format(split_file)
-        merge_splits_cmd_args = ['cat', tmp_split_files]
-        logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args + ['>', split_file])))
-        cat_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
+        cat_splits_cmd_args = ['cat', tmp_split_files]
+        logging.info("Submit command: {0}".format(' '.join(cat_splits_cmd_args + ['>', split_file])))
+        cat_stdout, err = subprocess.Popen(cat_splits_cmd_args, stdout=subprocess.PIPE).communicate()
         with open(split_file, 'wb') as stream:
             stream.write(cat_stdout)
         # Remove splits
-        merge_splits_cmd_args = [
+        rm_splits_cmd_args = [
             'rm'
         ]
-        merge_splits_cmd_args += glob.glob(tmp_split_files)
-        logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
-        subprocess.call(merge_splits_cmd_args)
+        rm_splits_cmd_args += glob.glob(tmp_split_files)
+        logging.info("Submit command: {0}".format(' '.join(rm_splits_cmd_args)))
+        subprocess.call(rm_splits_cmd_args)
         # Mstep
         with open(split_file) as stream:
             split_entries = len(stream.readlines())
