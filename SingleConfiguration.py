@@ -347,7 +347,7 @@ class SinglePairedConfiguration:
         for fai_index in range(1, fai_entries+1):
             cmd_split = [
                 exe, 'split',
-                '-i', fai_index,
+                '-i', str(fai_index),
                 '-f', config_file
             ]
             for key in self.params.keys():
