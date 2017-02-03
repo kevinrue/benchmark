@@ -58,14 +58,14 @@ configuration file is as follows:
     * **Special case**: the `CaVEMan` program is split in several steps
       with overlapping sets of flags. As a consequence, for `CaVEMan`
       this framework requires parameters to be supplied as
-      `step:flag[=value]`
-       by one of the
-      following (case-sensitive) keywords to specify which of the steps
-      should be given the parameter ():
+      `step:flag[=value]`, with `step` one of the following
+      (case-sensitive) keywords to specify which of the steps
+      should be given the parameter:
       * `setup`, `mstep`, `estep`
-      * Please note that the `split` step may not be configured. Instead,
-        this benchmark framework generates a *splitList* file that
-        mirrors the *.fai* index file of the reference genome.
+      * Please note that the `split` step may not be configured.
+        Instead, this benchmark framework generates a *splitList* file
+        that includes a single record for each entry in the *.fai* index
+        file of the reference genome.
       * Please note that the `merge` step does not include any parameter
         relevant for benchmarking. Any `merge:flag[=value]` parameter
         in the configuration file will be ignored.
