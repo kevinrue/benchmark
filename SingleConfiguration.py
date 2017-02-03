@@ -221,105 +221,18 @@ class SinglePairedConfiguration:
         return None
 
     def write_CaVEMan_scripts(
-            self, out, exe, ref, file1, file2, qsub_base, config_file_base,
-            setup_base, split_base, merge_splits_base, Mstep_base):
+            self, out, exe, qsub_base, config_file_base, Mstep_base):
         """
         Write a script to run the configuration using the VarScan program.
         """
         output_dir = os.path.join(out, self.out)
-        setup_script_file = os.path.join(output_dir, setup_base)
-        split_script_file = os.path.join(output_dir, split_base)
-        merge_splits_script_file = os.path.join(output_dir, merge_splits_base)
         Mstep_script_file = os.path.join(output_dir, Mstep_base)
         qsub_dir = os.path.join(output_dir, qsub_base)
         config_file = os.path.join(output_dir, config_file_base)
         logging.info("Create qsub output folder: {0}".format(qsub_dir))
         os.mkdir(qsub_dir)
-        self.write_prolog_script(setup_script_file)
-        self.write_CaVEMan_setup_script(setup_script_file, exe, ref, file1, file2, config_file, output_dir)
-        self.write_prolog_script(split_script_file)
-        self.write_CaVEMan_split_script(split_script_file, exe, config_file, qsub_dir)
-        self.write_prolog_script(merge_splits_script_file)
-        self.write_CaVEMan_merge_splits_script(merge_splits_script_file, output_dir)
         self.write_prolog_script(Mstep_script_file)
         self.write_CaVEMan_Mstep_script(Mstep_script_file, exe, config_file)
-        return None
-
-    def write_CaVEMan_setup_script(self, script, exe, ref, file1, file2, config_file, out):
-        """
-        Write a script to run the setup step of CaVEMan.
-        :param script:
-        :param exe:
-        :param ref:
-        :param file1:
-        :param file2:
-        :param config_file:
-        :param out: Folder for outputs of configuration.
-        :return:
-        """
-        output_folder = os.path.join(out, 'results')
-        split_file = os.path.join(out, 'splitList')
-        alg_bean_file = os.path.join(out, 'alg_bean')
-        cmd_setup = "{0} setup -t {1} -n {2} -r {3} -c {4} -f {5} -l {6} -a {7}".format(
-            exe, file2, file1, "{0}.fai".format(ref), config_file, output_folder, split_file, alg_bean_file
-        )
-        # Fail-safe: 'setup:-g' should have been added automatically if not specified in the config file
-        # See BenchmarkConfiguration.select_program_config(...)
-        if 'setup:-g' not in self.params.keys():
-            raise ValueError('"setup:-g" not found in parameters. Please contact maintainer.')
-        for key in self.params.keys():
-            if key.startswith('setup:'):
-                cmd_setup += " {0}".format(key.replace('setup:', ''))
-                if not self.params[key] is None:
-                    cmd_setup += " {0}".format(self.params[key])
-        cmd_setup += "\n"
-        with open(script, 'a') as stream:
-            # CaVEMan wants all steps to be run in the same working directory as the Setup step
-            # qsub jobs are launched from the $HOME directory
-            stream.write("cd $HOME\n")
-            stream.write(cmd_setup)
-            stream.write("cd -\n")
-        self.make_script_executable(script)
-        return None
-
-    def write_CaVEMan_split_script(self, script, exe, config_file, qsub_dir):
-        """
-
-        :param script:
-        :param exe:
-        :param config_file:
-        :param qsub_dir:
-        :return:
-        """
-        stdout_file = os.path.join(qsub_dir, 'out.split.${SGE_TASK_ID}')
-        stderr_file = os.path.join(qsub_dir, 'err.split.${SGE_TASK_ID}')
-        cmd_split = "{0} split -i $SGE_TASK_ID -f {1}".format(exe, config_file)
-        for key in self.params.keys():
-            if key.startswith('split:'):
-                cmd_split += " {0}".format(key.replace('split:', ''))
-                if self.params[key] is None:
-                    raise ValueError("CaVEMan split step does not support flags without value: {0}".format(key))
-                cmd_split += " {0}".format(self.params[key])
-        cmd_split += " 1>{0} 2>{1}\n".format(stdout_file, stderr_file)
-        with open(script, 'a') as stream:
-            stream.write(cmd_split)
-        self.make_script_executable(script)
-        return None
-
-    def write_CaVEMan_merge_splits_script(self, script, out):
-        """
-
-        :param script:
-        :param out: Folder for outputs of configuration.
-        :return:
-        """
-        split_file = os.path.join(out, 'splitList')
-        tmp_split_files = "{0}.*".format(split_file)
-        with open(script, 'a') as stream:
-            stream.write("ls -1 {0} | xargs\n".format(tmp_split_files))
-            stream.write("cat {0} > {1}\n".format(tmp_split_files, split_file))
-            stream.write("rm {0}\n".format(tmp_split_files))
-        self.make_script_executable(script)
         return None
 
     def write_CaVEMan_Mstep_script(self, script, exe, config_file):
@@ -388,57 +301,91 @@ class SinglePairedConfiguration:
         subprocess.call(qsub_cmd_args)
         return None
 
-    def submit_CaVEMan_scripts(self, out, ref_fai, qsub_base, setup_base, split_base, merge_splits_base):
+    def submit_CaVEMan_scripts(
+            self, out, exe, ref_fai, file1, file2, config_file, qsub_base, mstep_base):
         """
+
         :param out: Folder to store outputs of the program.
         :return: None
         """
-        output_dir = os.path.join(out, self.out)
-        qsub_dir = os.path.join(output_dir, qsub_base)
-        setup_script_file = os.path.join(output_dir, setup_base)
-        split_script_file = os.path.join(output_dir, split_base)
-        merge_splits_script_file = os.path.join(output_dir, merge_splits_base)
-        logging.info("Submit command: {0}".format(setup_script_file))
+        config_dir = os.path.join(out, self.out)
+        qsub_dir = os.path.join(config_dir, qsub_base)
+        result_folder = os.path.join(config_dir, 'results')
+        split_file = os.path.join(config_dir, 'splitList')
+        alg_bean_file = os.path.join(config_dir, 'alg_bean')
+        mstep_script_file = os.path.join(config_dir, mstep_base)
+        pattern_job_id = re.compile('.* (\d+)[ .].*')
+        # Setup
+        cmd_setup = [
+            exe, 'setup',
+            '-t', file2,
+            '-n', file1,
+            '-r', ref_fai,
+            '-c', config_file,
+            '-f', result_folder,
+            '-l', split_file,
+            '-a', alg_bean_file
+        ]
+        # Fail-safe: 'setup:-g' should have been added automatically if not specified in the config file
+        # See BenchmarkConfiguration.select_program_config(...)
+        if 'setup:-g' not in self.params.keys():
+            raise ValueError('"setup:-g" not found in parameters. Please contact maintainer.')
+        for key in self.params.keys():
+            if key.startswith('setup:'):
+                cmd_setup.append(key.replace('setup:', ''))
+                if not self.params[key] is None:
+                    cmd_setup.append(self.params[key])
+        logging.info("Submit command: {0}".format(' '.join(cmd_setup)))
+        subprocess.call(cmd_setup)
+        # Split
         if ref_fai is None:
             raise ValueError("ref_fai not set! please contact maintainer.")
         with open(ref_fai) as stream:
             fai_entries = len(stream.readlines())
             logging.info("# fai_entries: {0}".format(fai_entries))
-        # Setup
-        subprocess.call([setup_script_file])
-        pattern_job_id = re.compile('.* (\d+)[ .].*')
-        # Split
-        split_cmd_args = [
-            'qsub',
-            '-t', "1-{0}".format(fai_entries),
-            '-o', os.path.join(qsub_dir, '02_split.out'),
-            '-e', os.path.join(qsub_dir, '02_split.err'),
-            '-N', "setup_{0}".format(self.index),
-            '-q', 'short.qc',
-            split_script_file
+        for fai_index in range(1, fai_entries+1):
+            cmd_split = [
+                exe, 'split',
+                '-i', fai_index,
+                '-f', config_file
             ]
-        logging.info("Submit command: {0}".format(' '.join(split_cmd_args)))
-        setup_stdout, err = subprocess.Popen(split_cmd_args, stdout=subprocess.PIPE).communicate()
-        logging.info(setup_stdout.decode("utf-8").strip())
-        setup_job_id = pattern_job_id.match(setup_stdout.decode("utf-8")).group(1)
-        logging.info("split_{0} JOB_ID: {1}".format(self.index, setup_job_id))
+            for key in self.params.keys():
+                if key.startswith('split:'):
+                    cmd_split.append(key.replace('split:', ''))
+                    if self.params[key] is None:
+                        raise ValueError("CaVEMan split step does not support flags without value: {0}".format(key))
+                    cmd_split.append(self.params[key])
+            logging.info("Submitting command: {0}".format(' '.join(cmd_split)))
+            subprocess.call(cmd_split)
         # Merge splits
+        tmp_split_files = "{0}.*".format(split_file)
         merge_splits_cmd_args = [
-            'qsub',
-            '-hold_jid', setup_job_id, # hold until setup completed
-            '-o', os.path.join(qsub_dir, '03_merge-splits.out'),
-            '-e', os.path.join(qsub_dir, '03_merge-splits.err'),
-            '-N', "setup_{0}".format(self.index),
-            '-q', 'short.qc',
-            merge_splits_script_file
-            ]
+            'cat', tmp_split_files, '>', split_file,
+        ]
         logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
-        merge_splits_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
-        logging.info(merge_splits_stdout.decode("utf-8").strip())
-        setup_job_id = pattern_job_id.match(merge_splits_stdout.decode("utf-8")).group(1)
-        logging.info("merge_splits_{0} JOB_ID: {1}".format(self.index, setup_job_id))
+        subprocess.call(merge_splits_cmd_args)
+        # Remove splits
+        merge_splits_cmd_args = [
+            'rm', tmp_split_files
+        ]
+        logging.info("Submit command: {0}".format(' '.join(merge_splits_cmd_args)))
+        subprocess.call(merge_splits_cmd_args)
+        # Mstep
+        with open(split_file) as stream:
+            split_entries = len(stream.readlines())
+            logging.info("# split_entries: {0}".format(split_entries))
+        mstep_cmd_args = [
+            'qsub',
+            '-t', "1-{0}".format(split_entries),
+            '-o', os.path.join(qsub_dir, '01_Mstep.out'),
+            '-e', os.path.join(qsub_dir, '01_Mstep.err'),
+            '-N', "Mstep_{0}".format(self.index),
+            '-q', 'short.qc',
+            mstep_script_file
+        ]
+        logging.info("Submit command: {0}".format(' '.join(mstep_cmd_args)))
+        mstep_stdout, err = subprocess.Popen(merge_splits_cmd_args, stdout=subprocess.PIPE).communicate()
+        logging.info(mstep_stdout.decode("utf-8").strip())
+        mstep_job_id = pattern_job_id.match(mstep_stdout.decode("utf-8")).group(1)
+        logging.info("merge_splits_{0} JOB_ID: {1}".format(self.index, mstep_job_id))
         return None
-
-# def parse_job_id():
-#     cmd = 'sed \'s/.* \([0-9]\+\)\..*/\\1/\''
-#     return
