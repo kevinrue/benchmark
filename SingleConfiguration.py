@@ -460,7 +460,7 @@ class SinglePairedConfiguration:
         estep_cmd_args = [
             'qsub',
             '-t', "1-{0}".format(split_entries),
-            '-hold_jid_ad', merge_job_id,  # hold until Merge completed
+            '-hold_jid', merge_job_id,  # hold until Merge completed
             '-o', os.path.join(qsub_dir, '01_estep.out'),
             '-e', os.path.join(qsub_dir, '01_estep.err'),
             '-N', "Estep_{0}".format(self.index),
