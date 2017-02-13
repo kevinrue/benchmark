@@ -41,12 +41,16 @@ class PairedBenchmarkConfiguration:
         """
         if not len(config_line):
             return 0
-        try:
-            (program, params) = config_line.split('\t')
-        except ValueError:
-            print("Failed to split tab-separated configuration entry: {0}".format(config_line))
-            raise
-        parsed_params = self.parse_params(params)
+        config_split = config_line.split('\t')
+        config_num_fields = len(config_split)
+        if config_num_fields == 2:
+            (program, params) = config_split
+            parsed_params = self.parse_params(params)
+        elif config_num_fields == 1:
+            logging.info("No parameters detected. Default settings will apply.")
+            program = config_split[0]; parsed_params = {}
+        else:
+            raise ValueError("Invalid number of TAB-separated fields in config line: {0}".format(config_num_fields))
         if program in self.configurations.keys():
             self.configurations[program].add_configuration(parsed_params)
         else:
@@ -62,6 +66,7 @@ class PairedBenchmarkConfiguration:
         """
         parsed_params = {}
         keys_values = params.split(';')
+        logging.info("{0} parameters detected".format(len(keys_values)))
         for kv in keys_values:
             if '=' in kv:
                 (k, v) = kv.split('=')
@@ -91,8 +96,7 @@ class PairedBenchmarkConfiguration:
         elif program == "CaVEMan":
             return CaVEManPairedConfiguration(params, program)
         else:
-            print('Invalid program keyword: {0}'.format(program))
-            raise
+            raise ValueError('Invalid program keyword: {0}'.format(program))
 
     def make_dir_structure(self):
         """
