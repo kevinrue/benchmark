@@ -70,10 +70,10 @@ class SinglePairedConfiguration:
         logging.info("Create script file: {0}".format(script_file))
         output_vcf = os.path.join(out, self.out, 'output.vcf')
         output_filters = os.path.join(out, self.out, 'filters.txt')
-        dbsnp = "--dbsnp {0}".format(os.path.join(ref_beds_dir, 'known.vcf'))
-        cosmic = "--cosmic {0}".format(os.path.join(ref_beds_dir, 'Cosmic.vcf'))
-        lexico = '-U ALLOW_SEQ_DICT_INCOMPATIBILITY'
-        cmd = "{0} -Xmx25g -jar {1} -T MuTect2 -R {2} -I:tumor {3} -I:normal {4} {5} {6} -o {7} {8}".format(
+        dbsnp = os.path.join(ref_beds_dir, 'known.vcf')
+        cosmic = os.path.join(ref_beds_dir, 'Cosmic.vcf')
+        lexico = 'ALLOW_SEQ_DICT_INCOMPATIBILITY'
+        cmd = "{0} -Xmx25g -jar {1} -T MuTect2 -R {2} -I:tumor {3} -I:normal {4} --dbsnp {5} --cosmic {6} -o {7} -U {8}".format(
             java_exe, exe, ref, file2, file1, dbsnp, cosmic, output_vcf, lexico
         )
         for key in self.params.keys():
@@ -256,7 +256,7 @@ class SinglePairedConfiguration:
         """
         stdout_file = os.path.join(qsub_dir, 'out.mstep.${SGE_TASK_ID}')
         stderr_file = os.path.join(qsub_dir, 'err.mstep.${SGE_TASK_ID}')
-        cmd_Mstep = "{0} mstep -f {1} -i $SGE_TASK_ID".format(exe, config_file)
+        cmd_Mstep = "{0} mstep --config-file {1} --index $SGE_TASK_ID".format(exe, config_file)
         for key in self.params.keys():
             if key.startswith('mstep:'):
                 cmd_Mstep += " {0}".format(key.replace('mstep:', ''))
@@ -278,7 +278,9 @@ class SinglePairedConfiguration:
         :param config_file:
         :return:
         """
-        cmd_merge = "{0} merge -f {1} -c {2} -p {3}\n".format(exe, config_file, cov_file, prob_file)
+        cmd_merge = "{0} merge --config-file {1} --covariate-file {2} --probabilities-file {3}\n".format(
+            exe, config_file, cov_file, prob_file
+        )
         with open(script, 'a') as stream:
             stream.write('cd $SGE_O_WORKDIR\n')
             stream.write(cmd_merge)
@@ -295,7 +297,9 @@ class SinglePairedConfiguration:
         """
         stdout_file = os.path.join(qsub_dir, 'out.estep.${SGE_TASK_ID}')
         stderr_file = os.path.join(qsub_dir, 'err.estep.${SGE_TASK_ID}')
-        cmd_Mstep = "{0} estep -i $SGE_TASK_ID -f {1} -g {2} -o {3}".format(exe, config_file, cov_file, prob_file)
+        cmd_Mstep = "{0} estep --index $SGE_TASK_ID --config-file {1} -g {2} -o {3}".format(
+            exe, config_file, cov_file, prob_file
+        )
         for key in self.params.keys():
             if key.startswith('estep:'):
                 cmd_Mstep += " {0}".format(key.replace('estep:', ''))
@@ -375,20 +379,14 @@ class SinglePairedConfiguration:
         # Setup
         cmd_setup = [
             exe, 'setup',
-            '-t', file2,
-            '-n', file1,
-            '-r', ref_fai,
-            '-c', config_file,
-            '-f', result_folder,
-            '-l', split_file,
-            '-a', alg_bean_file
+            '--tumour-bam', file2,
+            '--normal-bam ', file1,
+            '--reference-index', ref_fai,
+            '--config-file', config_file,
+            '--results-folder', result_folder,
+            '--split-file', split_file,
+            '--alg-bean-file', alg_bean_file
         ]
-        # Fail-safe: 'setup:-g' should have been added automatically if not specified in the config file
-        # See BenchmarkConfiguration.select_program_config(...)
-        if 'setup:-g' not in self.params.keys():
-            raise ValueError(
-                '"setup:-g" not found in parameters. Please contact maintainer (or add it in config file).'
-            )
         for key in self.params.keys():
             if key.startswith('setup:'):
                 cmd_setup.append(key.replace('setup:', ''))
