@@ -124,7 +124,7 @@ class VirmidPairedConfiguration(PairedProgramConfiguration):
     """
     def __init__(self, params, out):
         super().__init__(params, out)
-        self.path2exe = os.path.join(Virmid_dir, 'virmid.jar')
+        self.path2exe = os.path.join(Virmid_dir, 'Virmid1.2', 'Virmid.jar')
 
     def write_scripts(self, out, ref, file1, file2):
         """
