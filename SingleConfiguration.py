@@ -5,6 +5,7 @@ import re
 
 from LocalSettings import *
 
+# Set the root logging level to DEBUG
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -15,8 +16,8 @@ class SinglePairedConfiguration:
 
     config_filename = 'benchmark_config.txt'
     script_filename = 'benchmark_script.sh'
-    job_stdout = 'stdout.log'
-    job_stderr = 'stderr.log'
+    job_stdout = 'qsub.out'
+    job_stderr = 'qsub.err'
     n_cores = 4
 
     def __init__(self, params, index):
@@ -255,8 +256,8 @@ class SinglePairedConfiguration:
         :param config_file:
         :return:
         """
-        stdout_file = os.path.join(qsub_dir, 'out.mstep.${SGE_TASK_ID}')
-        stderr_file = os.path.join(qsub_dir, 'err.mstep.${SGE_TASK_ID}')
+        stdout_file = os.path.join(qsub_dir, 'mstep.out.${SGE_TASK_ID}')
+        stderr_file = os.path.join(qsub_dir, 'mstep.err.${SGE_TASK_ID}')
         cmd_Mstep = "{0} mstep --config-file {1} --index $SGE_TASK_ID".format(exe, config_file)
         for key in self.params.keys():
             if key.startswith('mstep:'):
@@ -296,8 +297,8 @@ class SinglePairedConfiguration:
         :param config_file:
         :return:
         """
-        stdout_file = os.path.join(qsub_dir, 'out.estep.${SGE_TASK_ID}')
-        stderr_file = os.path.join(qsub_dir, 'err.estep.${SGE_TASK_ID}')
+        stdout_file = os.path.join(qsub_dir, 'estep.out.${SGE_TASK_ID}')
+        stderr_file = os.path.join(qsub_dir, 'estep.err.${SGE_TASK_ID}')
         cmd_Mstep = "{0} estep --index $SGE_TASK_ID --config-file {1} -g {2} -o {3}".format(
             exe, config_file, cov_file, prob_file
         )
@@ -369,6 +370,8 @@ class SinglePairedConfiguration:
         """
         config_dir = os.path.join(out, self.out)
         config_file = os.path.join(config_dir, config_base)
+        setup_out = os.path.join(config_dir, 'setup.out')
+        setup_err = os.path.join(config_dir, 'setup.err')
         qsub_dir = os.path.join(config_dir, qsub_base)
         result_folder = os.path.join(config_dir, 'results')
         split_file = os.path.join(config_dir, 'splitList')
@@ -394,7 +397,7 @@ class SinglePairedConfiguration:
                 if not self.params[key] is None:
                     cmd_setup.append(self.params[key])
         logging.info("Submit command: {0}".format(' '.join(cmd_setup)))
-        subprocess.call(cmd_setup)
+        subprocess.call(cmd_setup, stdout=open(setup_out, 'w'), stderr=open(setup_err, 'w'))
         # Split
         if ref_fai is None:
             raise ValueError("ref_fai not set! please contact maintainer.")
@@ -411,8 +414,8 @@ class SinglePairedConfiguration:
         mstep_cmd_args = [
             'qsub',
             '-t', "1-{0}".format(split_entries),
-            '-o', os.path.join(qsub_dir, '01_mstep.out'),
-            '-e', os.path.join(qsub_dir, '01_mstep.err'),
+            '-o', os.path.join(qsub_dir, 'mstep.out.job'),
+            '-e', os.path.join(qsub_dir, 'mstep.err.job'),
             '-N', "Mstep_{0}".format(self.index),
             '-q', 'short.qc',
             mstep_script_file
@@ -426,8 +429,8 @@ class SinglePairedConfiguration:
         merge_cmd_args = [
             'qsub',
             '-hold_jid', mstep_job_id,  # hold until Mstep completed
-            '-o', os.path.join(qsub_dir, '02_merge.out'),
-            '-e', os.path.join(qsub_dir, '02_merge.err'),
+            '-o', os.path.join(qsub_dir, 'merge.out.job'),
+            '-e', os.path.join(qsub_dir, 'merge.err.job'),
             '-N', "merge_{0}".format(self.index),
             '-q', 'short.qc',
             merge_script_file
@@ -442,8 +445,8 @@ class SinglePairedConfiguration:
             'qsub',
             '-t', "1-{0}".format(split_entries),
             '-hold_jid', merge_job_id,  # hold until Merge completed
-            '-o', os.path.join(qsub_dir, '03_estep.out'),
-            '-e', os.path.join(qsub_dir, '03_estep.err'),
+            '-o', os.path.join(qsub_dir, 'estep.out.job'),
+            '-e', os.path.join(qsub_dir, 'estep.err.job'),
             '-N', "Estep_{0}".format(self.index),
             '-q', 'short.qc',
             estep_script_file

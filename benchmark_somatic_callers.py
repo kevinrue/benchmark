@@ -6,7 +6,9 @@ import argparse
 # Custom
 from BenchmarkConfiguration import *
 
-logging.basicConfig(level=logging.DEBUG)
+# Note that by default, logging prints message on "stderr"
+# For more control over logging, see link below
+# http://stackoverflow.com/questions/14058453/making-python-loggers-output-all-messages-to-stdout-in-addition-to-log
 
 
 if __name__ == '__main__':
