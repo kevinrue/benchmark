@@ -380,7 +380,7 @@ class SinglePairedConfiguration:
         cmd_setup = [
             exe, 'setup',
             '--tumour-bam', file2,
-            '--normal-bam ', file1,
+            '--normal-bam', file1,
             '--reference-index', ref_fai,
             '--config-file', config_file,
             '--results-folder', result_folder,
