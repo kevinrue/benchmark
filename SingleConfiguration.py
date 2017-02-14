@@ -85,11 +85,12 @@ class SinglePairedConfiguration:
         with open(script_file, 'a') as stream:
             # stream.write("cd {0}\n".format(output_dir))
             stream.write(cmd)
-            stream.write(
-                "awk '$0 ~ /^[^#]/ {{nFilters = split($7,filters,\";\"); for (i = 0; i < nFilters; ++i) {{print filters[i+1]}} }}' {0} | sort | uniq -c > {1}".format(
-                    output_vcf, output_filters
-                )
-            )
+            # Keep the awk command below for later post-processing
+            # stream.write(
+            #     "awk '$0 ~ /^[^#]/ {{nFilters = split($7,filters,\";\"); for (i = 0; i < nFilters; ++i) {{print filters[i+1]}} }}' {0} | sort | uniq -c > {1}".format(
+            #         output_vcf, output_filters
+            #     )
+            # )
         self.make_script_executable(script_file)
         return None
 
