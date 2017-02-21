@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+.idea
+*~
+*.pyc
+
+benchmark_MuTect2/
+benchmark_Strelka/
+benchmark_Virmid/
+benchmark_EBCall/
+benchmark_VarScan/
+benchmark_CaVEMan/
+benchmark_all/
